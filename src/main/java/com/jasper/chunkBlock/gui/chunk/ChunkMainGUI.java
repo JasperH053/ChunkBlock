@@ -14,6 +14,7 @@ import com.jasper.chunkBlock.team.Team;
 import com.jasper.chunkBlock.util.MessageUtils;
 import com.jasper.chunkBlock.team.TeamService;
 import org.bukkit.Chunk;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -24,7 +25,7 @@ public class ChunkMainGUI {
 
     private Player player;
     private final Team team;
-    private Database database;
+    private TeamService teamService;
 
     public ChunkMainGUI(Player player, Team team) {
         this.player = player;
@@ -32,8 +33,8 @@ public class ChunkMainGUI {
     }
 
     public void open() {
-        this.database = ChunkBlock.getInstance().getDatabase();
-        ClaimedChunk claimedChunk = database.getChunkByOwner(player.getUniqueId());
+        this.teamService = ChunkBlock.getInstance().getTeamService();
+        ClaimedChunk claimedChunk = teamService.getChunkByPlayer(player.getUniqueId());
         if (claimedChunk == null) {
             MessageUtils.sendError(player, "§cChunk not found!");
             return;
@@ -57,7 +58,8 @@ public class ChunkMainGUI {
         shopMeta.setDisplayName("Chunk - Home");
         shop.setItemMeta(shopMeta);
         navigationPane.addItem(new GuiItem(shop, event -> {
-            player.teleport(claimedChunk.getHome());
+            Location locationHome = claimedChunk.getHome();
+            player.teleport(locationHome);
             MessageUtils.sendSuccess(player, "Teleported to your chunk home");
         }));
 

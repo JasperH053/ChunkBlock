@@ -23,8 +23,8 @@ public class DisbandChunkGUI extends ConfirmationGUI {
 
     @Override
     protected void onConfirm() {
-//        RegionSynchronizer.deleteRegion(team,claimedChunk.getBorder(team));
-        teamService.deleteTeam(player.getUniqueId());
+        Team team = teamService.getTeamByPlayer(player.getUniqueId());
+        teamService.deleteTeam(team);
         MessageUtils.sendSuccess(player, "Chunk has succesfully been disbanded!");
     }
 

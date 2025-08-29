@@ -5,6 +5,7 @@ import com.jasper.chunkBlock.chunk.ClaimedChunk;
 import com.jasper.chunkBlock.database.Database;
 import com.jasper.chunkBlock.team.Team;
 import com.jasper.chunkBlock.team.TeamService;
+import com.jasper.chunkBlock.util.MessageUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -28,32 +29,19 @@ public class PlayerJoinListener implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-
-        Team team = teamService.getTeamByPlayer(player.getUniqueId());
-
-        if (team == null) {
-            Bukkit.getLogger().info("Player heeft geen team.");
-            return;
-        }
-
-
-        ClaimedChunk chunk = database.getChunkByOwner(player.getUniqueId());
-
-        Listener moveListener = new Listener() {
-            @EventHandler
-            public void onPlayerMove(PlayerMoveEvent moveEvent) {
-                if (teamService.isPlayerInAnyTeam(player.getUniqueId())) {
-                    if (moveEvent.getPlayer().equals(player)) {
-                        teamService.applyBorderForPlayer(player, chunk);
-
-                        HandlerList.unregisterAll(this);
-                    }
-                } else {
-                    HandlerList.unregisterAll(this);
-                }
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (!teamService.isPlayerInAnyTeam(player)) {
+                player.setWorldBorder(null);
+                return;
             }
-        };
 
-        plugin.getServer().getPluginManager().registerEvents(moveListener, plugin);
+            Team team = teamService.getTeamByPlayer(player.getUniqueId());
+            if (team == null) { player.setWorldBorder(null); return; }
+
+            // Haal chunk via teamId, NIET via owner
+            ClaimedChunk chunk = teamService.getClaimedChunkByTeamId(team.getTeamId());
+            teamService.applyBorderForPlayer(player, chunk); // zorg dat deze null-safe is
+        }, 1L);
     }
+
 }

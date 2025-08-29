@@ -43,10 +43,10 @@ public class CreateTeamCommand extends SubCommand {
             teamName = args[1];
             owner = player.getUniqueId();
 
-            if (!teamService.isPlayerInAnyTeam(owner)) {
+            if (teamService.getTeamByPlayer(owner) == null) {
                 teamService.createTeam(teamName, player);
             } else {
-                MessageUtils.sendError(player, "&cYou are already in a chunkparty, leave this one first!");
+                MessageUtils.sendError(player, "&cYou joined a team already!");
             }
 
         }

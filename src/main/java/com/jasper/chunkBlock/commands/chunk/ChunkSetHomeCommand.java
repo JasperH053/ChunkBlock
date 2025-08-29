@@ -1,43 +1,39 @@
 package com.jasper.chunkBlock.commands.chunk;
 
 import com.jasper.chunkBlock.chunk.ChunkStorage;
+import com.jasper.chunkBlock.chunk.ClaimedChunk;
 import com.jasper.chunkBlock.commands.SubCommand;
 import com.jasper.chunkBlock.team.Team;
+import com.jasper.chunkBlock.team.TeamService;
 import com.jasper.chunkBlock.util.MessageUtils;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
+import java.sql.SQLException;
+
 public class ChunkSetHomeCommand extends SubCommand {
 
-    private Team team;
-    private YamlConfiguration borderData;
+    private TeamService teamService;
 
-    public ChunkSetHomeCommand(String name, String description, String syntax, Team team, ChunkStorage chunkStorage) {
+    public ChunkSetHomeCommand(String name, String description, String syntax, TeamService teamService) {
         super(name, description, syntax);
-        this.team = team;
+        this.teamService = teamService;
     }
-
-//    @Override
-//    public void perform(Player player, String[] args) {
-//        Team playerTeam = teamStorage.getTeamFromPlayer(player.getUniqueId());
-//        if (teamStorage.checkTeamExist(playerTeam)) {
-//            Location home = player.getLocation().clone();
 
     @Override
     public void perform(Player player, String[] args) {
+        Team team = teamService.getTeamByPlayer(player.getUniqueId());
+        ClaimedChunk claimedChunk = teamService.getChunkByPlayer(player.getUniqueId());
 
+        claimedChunk.setHome(player.getLocation());
+        try {
+            claimedChunk.saveHomeToDb();
+            MessageUtils.sendSuccess(player, "Succesfully set new home!");
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
-
-    ////            ClaimedChunk claimedChunk = ChunkStorage.getChunk();
-////            claimedChunk.setHome(home);
-////            Border border = borderStorage.getBorder(playerTeam);
-////            border.setHome(home);
-//            MessageUtils.sendSuccess(player,"Succesfully set new home");
-//        } else {
-//            MessageUtils.sendError(player,"&cYou don't have a team");
-//        }
-//    }
 
     @Override
     public String getName() {

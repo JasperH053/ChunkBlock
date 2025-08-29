@@ -42,21 +42,19 @@ public class DisbandTeamCommand extends SubCommand {
             if (team == null) {
                 MessageUtils.sendError(player, "&f" + teamName + "&7 does not exist.");
                 return;
-            }
-
-            if (teamService.isPlayerInAnyTeam(player.getUniqueId())) {
+            } else {
                 if (team.getOwner().equals(player.getUniqueId())) {
                     DisbandChunkGUI disbandTeamGUI = new DisbandChunkGUI(player,teamService,teamService.getChunkByPlayer(player.getUniqueId()));
                     disbandTeamGUI.open();
                 }
-                 else if (!team.getOwner().equals(player.getUniqueId())) {
+                else if (!team.getOwner().equals(player.getUniqueId())) {
                     player.sendMessage(ChatColor.RED + "You are not the owner of this team");
                 } else {
                     player.sendMessage(ChatColor.RED + "Team does not exist.");
                 }
-            } else {
-                player.sendMessage(ChatColor.RED + "You don't have a team to leave");
             }
+
+
         }
     }
 }

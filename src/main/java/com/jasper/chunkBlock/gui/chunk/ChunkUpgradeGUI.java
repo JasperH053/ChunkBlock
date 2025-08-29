@@ -16,11 +16,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-
-import java.sql.Connection;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 
 public class ChunkUpgradeGUI {

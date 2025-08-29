@@ -8,6 +8,10 @@ import org.bukkit.World;
 import org.bukkit.WorldBorder;
 import org.bukkit.entity.Player;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 
 public class ClaimedChunk {
@@ -19,6 +23,9 @@ public class ClaimedChunk {
     private final double radius;
     private Location home;
     private String owner;
+    private int homeX;
+    private int homeY;
+    private int homeZ;
     private final int x;
     private final int z;
     private int level;
@@ -26,7 +33,7 @@ public class ClaimedChunk {
     private final Map<String, Object> upgrades = new HashMap<>();
     private final Map<SettingType, Boolean> settings = new HashMap<>();
 
-    public ClaimedChunk(String chunkid, String teamid, String ownerUuid, int level, String world, int centerX, int centerZ, int borderRadius) {
+    public ClaimedChunk(String chunkid, String teamid, String ownerUuid, int level, String world, int homeX, int homeY, int homeZ, int centerX, int centerZ, int borderRadius) {
         this.world = world;
         this.radius = borderRadius;
         this.owner = ownerUuid;
@@ -79,7 +86,75 @@ public class ClaimedChunk {
     public boolean isSettingEnabled(SettingType type) { return settings.getOrDefault(type, false); }
     public Map<String, Object> getUpgrades() { return upgrades; }
     public Map<SettingType, Boolean> getSettings() { return settings; }
-    public Location getHome() { return home; }
+
+    public Location getHome() {
+        return home;
+    }
+
+    public void loadHomeFromDb() throws SQLException {
+        String sql = "SELECT home_x, home_y, home_z FROM chunks WHERE chunkid = ?";
+        try (Connection con = ChunkBlock.getInstance().getDatabase().getConnectionF();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            // Belangrijk: bind de parameter
+            ps.setString(1, String.valueOf(this.chunkId)); // of setInt/setLong afhankelijk van je type
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) {
+                    Bukkit.getLogger().warning("[ChunkBlock] Geen chunk-record gevonden voor chunkId=" + this.chunkId);
+                    this.home = null;
+                    return;
+                }
+
+                if (rs.getObject("home_x") == null) {
+                    Bukkit.getLogger().info("[ChunkBlock] Home is (nog) niet ingesteld voor chunkId=" + this.chunkId);
+                    this.home = null;
+                    return;
+                }
+
+                double x = rs.getDouble("home_x");
+                double y = rs.getDouble("home_y");
+                double z = rs.getDouble("home_z");
+
+                World w = Bukkit.getWorld(this.world); // verwacht wereldnaam
+                if (w == null) {
+                    Bukkit.getLogger().warning("[ChunkBlock] Wereld niet geladen of onbekend: " + this.world
+                            + " (chunkId=" + this.chunkId + "). Home blijft null.");
+                    this.home = null;
+                    return;
+                }
+
+                this.home = new Location(w, x, y, z);
+                Bukkit.getLogger().info("[ChunkBlock] Home geladen voor chunkId=" + this.chunkId
+                        + " @ " + x + "," + y + "," + z + " in wereld " + this.world);
+            }
+        }
+    }
+
+
+    public void saveHomeToDb() throws SQLException {
+        String sql = "UPDATE chunks SET home_x = ?, home_y = ?, home_z = ? WHERE chunkid = ?";
+        try (Connection con = ChunkBlock.getInstance().getDatabase().getConnectionF();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            if (this.home == null) {
+                ps.setNull(1, java.sql.Types.DOUBLE);
+                ps.setNull(2, java.sql.Types.DOUBLE);
+                ps.setNull(3, java.sql.Types.DOUBLE);
+            } else {
+                if (home.getWorld() == null || !home.getWorld().getName().equals(this.world)) {
+                    throw new IllegalArgumentException("Home-wereld komt niet overeen met chunk-wereld: " + this.world);
+                }
+                ps.setDouble(1, home.getX());
+                ps.setDouble(2, home.getY());
+                ps.setDouble(3, home.getZ());
+            }
+
+            ps.setString(4, this.chunkId);
+            ps.executeUpdate();
+        }
+    }
+
     public String getChunkId() {
         return chunkId;
     }

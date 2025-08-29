@@ -3,10 +3,15 @@ package com.jasper.chunkBlock.chunk;
 import com.jasper.chunkBlock.ChunkBlock;
 import com.jasper.chunkBlock.chunk.levels.LevelConfig;
 import com.jasper.chunkBlock.database.Database;
+import com.jasper.chunkBlock.team.Team;
+import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -19,28 +24,25 @@ public class ChunkStorage {
 
     private final Map<String, ClaimedChunk> chunksByTeamId = new HashMap<>();
     private Database database = ChunkBlock.getInstance().getDatabase();
+    FileConfiguration config = ChunkBlock.getInstance().getConfig();
 
-    public ClaimedChunk loadChunk(String chunkId) {
-        String sql = "SELECT chunkid, teamid, owner_uuid, level, levelxp, world, center_x, center_z, border_radius FROM chunks WHERE chunkid = ?";
-        try (PreparedStatement stmt = database.getConnectionF().prepareStatement(sql)) {
-            stmt.setString(1, chunkId);
 
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                String teamId = rs.getString("teamid");
-                UUID owner = UUID.fromString(rs.getString("owner_uuid"));
-                int level = rs.getInt("level");
-                String world = rs.getString("world");
-                int centerX = rs.getInt("center_x");
-                int centerZ = rs.getInt("center_z");
-                int borderRadius = rs.getInt("border_radius");
+    public ClaimedChunk createChunk(Team team, String chunkId, World world, Player player) {
+        int level = 1;
 
-                return new ClaimedChunk(chunkId, teamId, owner.toString(), level, world, centerX, centerZ, borderRadius);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
+        ClaimedChunk claimedChunk = new ClaimedChunk(chunkId, team.getTeamId(), team.getOwner().toString(), level, world.getName(), (int) player.getX(), (int) player.getY(), (int) player.getZ(), (int) player.getX(), (int) player.getZ(), config.getInt("defaultChunkSize"));
+        claimedChunk.setHome(player.getLocation());
+        claimedChunk.createBorder(player);
+
+        chunksByTeamId.put(team.getTeamId(), claimedChunk);
+        database.addChunk(claimedChunk);
+
+        return claimedChunk;
+    }
+
+
+    public void deleteChunk(Team team) {
+        chunksByTeamId.remove(team.getTeamId());
     }
 
     public void addClaimedChunk(String teamId, ClaimedChunk claimedChunk) {
@@ -50,5 +52,7 @@ public class ChunkStorage {
     public ClaimedChunk getChunkByTeamId(String teamId) {
         return chunksByTeamId.get(teamId);
     }
+
+
 
 }

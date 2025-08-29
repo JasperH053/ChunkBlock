@@ -1,7 +1,9 @@
 package com.jasper.chunkBlock.commands;
 
 import com.jasper.chunkBlock.ChunkBlock;
+import com.jasper.chunkBlock.commands.chunk.ChunkHomeCommand;
 import com.jasper.chunkBlock.commands.chunk.ChunkMainCommand;
+import com.jasper.chunkBlock.commands.chunk.ChunkSetHomeCommand;
 import com.jasper.chunkBlock.commands.chunk.ChunkUpgradeCommand;
 import com.jasper.chunkBlock.commands.team.*;
 import com.jasper.chunkBlock.commands.util.HulpCommand;
@@ -24,13 +26,12 @@ public class CommandManager implements CommandExecutor {
     public CommandManager(ChunkBlock plugin, TeamService teamService) {
         this.plugin = plugin;
         this.teamService = teamService;
-//        subcommands.add(new BorderBypassCommand("", "", "", teamService));
         subcommands.add(new HulpCommand("", "", "", this));
         subcommands.add(new CreateTeamCommand("", "", "", plugin, "", teamService));//        subcommands.add(new LeaveTeamCommand("","","",team, teamStorage,borderStorage));
-//        subcommands.add(new JoinTeamCommand("","","",team,teamStorage,borderStorage));
+        subcommands.add(new JoinTeamCommand("","","",teamService));
         subcommands.add(new DisbandTeamCommand("","","",teamService));
-//        subcommands.add(new ChunkHomeCommand("","","",team, borderStorage, teamStorage));
-//        subcommands.add(new ChunkSetHomeCommand("","","",team,borderStorage, teamStorage));
+        subcommands.add(new ChunkHomeCommand("","","", teamService));
+        subcommands.add(new ChunkSetHomeCommand("","","",teamService));
 //        subcommands.add(new ChunkSettingsCommand("","","",team,teamStorage));
 //        subcommands.add(new ShowTeams("","","",teamStorage));
         subcommands.add(new ChunkUpgradeCommand("", "", "",teamService));
@@ -42,10 +43,11 @@ public class CommandManager implements CommandExecutor {
             return true;
         }
         Player p = (Player) sender;
+        Team team = teamService.getTeamByPlayer(p.getUniqueId());
 
         if (label.equalsIgnoreCase("c")) {
             if (args.length == 0) {
-                if (teamService.isPlayerInAnyTeam(p.getUniqueId())) {
+                if (team != null) {
                     ChunkMainCommand c = new ChunkMainCommand();
                     c.open(p, teamService);
                 } else {

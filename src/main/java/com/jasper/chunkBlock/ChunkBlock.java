@@ -76,11 +76,7 @@ public final class ChunkBlock extends JavaPlugin {
     @Override
     public void onDisable() {
         if (database != null) {
-            try {
-                database.closeConnection();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            database.closeConnection();
         }
         instance = null;
         Bukkit.getLogger().info("[ChunkBlock] Plugin disabled.");

@@ -26,8 +26,7 @@ public class TeamService {
     private final ChunkStorage chunkStorage;
     private Map<String, Team> teamsById = new HashMap<>();
     private Map<UUID, Team> teamsByPlayer = new HashMap<>();
-    FileConfiguration config = ChunkBlock.getInstance().getConfig();
-
+    private final Map<String, ClaimedChunk> chunksByTeamId = new HashMap<>();
 
     public TeamService(Database database, ChunkStorage chunkStorage) {
         this.database = database;
@@ -37,21 +36,19 @@ public class TeamService {
     public Team createTeam(String name, Player player) {
         String teamId = IdGenerator.generateId();
         String chunkId = IdGenerator.generateId();
-        int level = 1;
+
         Set<UUID> members = new HashSet<>();
         members.add(player.getUniqueId());
+
         Team team = new Team(teamId, player.getUniqueId(),name);
+        World world = player.getWorld();
+
         teamsById.put(teamId, team);
         teamsByPlayer.put(player.getUniqueId(), team);
-        World world = player.getWorld();
-//        ClaimedChunk chunk = new ClaimedChunk(world.getName(), config.getInt("defaultChunkSize"), (int) player.getX(), (int) player.getZ(),teamId, chunkId);
-        ClaimedChunk chunk = new ClaimedChunk(chunkId, teamId, player.getUniqueId().toString(), level, world.getName(), (int) player.getX(), (int) player.getZ(), config.getInt("defaultChunkSize"));
-        chunk.setHome(player.getLocation());
-
-        chunk.createBorder(player);
-        database.addTeam(team);
-        database.addChunk(chunk);
         addMember(teamId,player);
+
+        database.addTeam(team);
+        chunkStorage.createChunk(team, chunkId, world, player);
 
         return team;
     }
@@ -72,6 +69,12 @@ public class TeamService {
                 ClaimedChunk claimedChunk = loadChunkByTeamId(teamId); // Zorg dat je deze methode hebt
                 if (claimedChunk != null) {
                     chunkStorage.addClaimedChunk(teamId, claimedChunk);
+                    try {
+                        claimedChunk.loadHomeFromDb();
+                        Bukkit.getLogger().info("Loading home");
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
                 } else {
                     Bukkit.getLogger().warning("[ChunkBlock] Geen chunk gevonden voor team " + teamId);
                 }
@@ -99,6 +102,7 @@ public class TeamService {
 
     public ClaimedChunk loadChunkByTeamId(String teamId) {
         String sql = "SELECT * FROM chunks WHERE teamid = ?";
+        chunkStorage.addClaimedChunk(teamId, getClaimedChunkByTeamId(teamId));
         try (PreparedStatement stmt = database.getConnectionF().prepareStatement(sql)) {
             stmt.setString(1, teamId);
             ResultSet rs = stmt.executeQuery();
@@ -110,6 +114,9 @@ public class TeamService {
                         (rs.getString("owner_uuid")),
                         rs.getInt("level"),
                         rs.getString("world"),
+                        rs.getInt("home_x"),
+                        rs.getInt("home_y"),
+                        rs.getInt("home_z"),
                         rs.getInt("center_x"),
                         rs.getInt("center_z"),
                         rs.getInt("border_radius")
@@ -121,8 +128,6 @@ public class TeamService {
         return null;
     }
 
-
-
     public ClaimedChunk getClaimedChunkByTeamId(String teamId) {
         try (PreparedStatement stmt = database.getConnectionF().prepareStatement("SELECT * FROM chunks WHERE teamid = ?")) {
             stmt.setString(1, teamId);
@@ -132,11 +137,14 @@ public class TeamService {
                 String owner = rs.getString("owner_uuid");
                 int level = rs.getInt("level");
                 String world = rs.getString("world");
-                int x = rs.getInt("center_x");
-                int z = rs.getInt("center_z");
+                int homeX = rs.getInt("home_x");
+                int homeY = rs.getInt("home_y");
+                int homeZ = rs.getInt("home_z");
+                int centerX = rs.getInt("center_x");
+                int centerZ = rs.getInt("center_z");
                 int radius = rs.getInt("border_radius");
 
-                return new ClaimedChunk(chunkid, teamId, owner, level, world, x, z, radius); // constructor moet hiermee matchen
+                return new ClaimedChunk(chunkid, teamId, owner, level, world, homeX, homeY, homeZ, centerX, centerZ, radius); // constructor moet hiermee matchen
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -156,9 +164,20 @@ public class TeamService {
         }
     }
 
-    public boolean deleteTeam(UUID uuid) {
-        database.deleteTeam(getTeamByPlayer(uuid).getTeamId());
-        getChunkByPlayer(uuid).removeBorder();
+    public boolean deleteTeam(Team team) {
+        try {
+            for (UUID uuid : team.getMembersOfTeam()) {
+                Player player = Bukkit.getPlayer(uuid);
+                player.setWorldBorder(null);
+            }
+
+            database.deleteTeam(team.getTeamId());
+            teamsByPlayer.remove(team.getOwner());
+            teamsById.remove(team.getTeamId());
+            chunkStorage.deleteChunk(team);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         return true;
     }
 
@@ -174,19 +193,32 @@ public class TeamService {
     }
 
     public ClaimedChunk getChunkByPlayer(UUID playerUuid) {
-        ClaimedChunk claimedChunk = chunkStorage.getChunkByTeamId(getTeamByPlayer(playerUuid).getTeamId());
-        return claimedChunk;
+        ClaimedChunk claimeddChunk = chunkStorage.getChunkByTeamId(getTeamByPlayer(playerUuid).getTeamId());
+        return claimeddChunk;
     }
 
-    public ClaimedChunk getChunkByTeam(Team team) {
-        ClaimedChunk claimedChunk = chunkStorage.getChunkByTeamId(team.getTeamId());
-        return claimedChunk;
+    public Team getTeamByName(String targetTeamName) {
+        Team team = teamsById.values().stream()
+                .filter(t -> t.getTeamName().equalsIgnoreCase(targetTeamName))
+                .findFirst()
+                .orElse(null);
+        return team;
+    }
+
+    public boolean isPlayerInAnyTeam(Player player) {
+        return teamsByPlayer.containsKey(player.getUniqueId());
     }
 
 
     public void applyBorderForPlayer(Player player, ClaimedChunk chunk) {
         World world = Bukkit.getWorld(chunk.getWorld());
-        if (world == null) {
+
+        if (!isPlayerInAnyTeam(player)) {
+            player.setWorldBorder(null);
+            return;
+        }
+
+        if (world == null ) {
             player.sendMessage("§cDe wereld '" + chunk.getWorld() + "' bestaat niet!");
             return;
         }
@@ -270,16 +302,6 @@ public class TeamService {
                 .collect(Collectors.toList());
     }
 
-    public boolean isPlayerInAnyTeam(UUID playerUUID) {
-        for (Team team : teamsByPlayer.values()) {
-            for (UUID member : team.getMembersOfTeam()) {
-                if (member.equals(playerUUID)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
 //
 //    public void removeTeam(Team team, Player player) {
 //        teams.remove(team.getTeamName());
@@ -303,9 +325,6 @@ public class TeamService {
 //        }
 //    }
 //
-    public boolean checkTeamExist(Team team) {
-        return teamsById.containsValue(team);
-    }
 
     public Map<String, Team> getTeams() {
         return teamsById;

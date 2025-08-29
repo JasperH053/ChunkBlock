@@ -7,6 +7,7 @@ import com.jasper.chunkBlock.database.Database;
 import com.jasper.chunkBlock.gui.chunk.ChunkUpgradeGUI;
 import com.jasper.chunkBlock.team.Team;
 import com.jasper.chunkBlock.team.TeamService;
+import com.jasper.chunkBlock.util.MessageUtils;
 import org.bukkit.entity.Player;
 
 public class ChunkUpgradeCommand extends SubCommand {
@@ -21,15 +22,19 @@ public class ChunkUpgradeCommand extends SubCommand {
     @Override
     public void perform(Player player, String[] args) {
         Team team = teamService.getTeamByPlayer(player.getUniqueId());
-        Database database = ChunkBlock.getInstance().getDatabase();
-        ClaimedChunk claimedChunk = teamService.getChunkByTeam(team);
+        if (team == null) {
+            MessageUtils.sendError(player, "You are not in a Team!");
+            return;
+        }
 
-        claimedChunk.setLevel(15);
-        database.updateChunkLevelAsync(claimedChunk, 15);
+        ClaimedChunk claimedChunk = teamService.getChunkByPlayer(player.getUniqueId());
+        if (claimedChunk == null) {
+            MessageUtils.sendError(player, "You are not in a Chunk!");
+            return;
+        }
 
-        //database.updateChunkLevel(claimedChunk,13);
-        //        ChunkUpgradeGUI ch = new ChunkUpgradeGUI(player,team,teamService.getChunkByTeam(team));
-        //        ch.open(player, team);
+        ChunkUpgradeGUI chunkUpgradeGUI = new ChunkUpgradeGUI(player, team, claimedChunk);
+        chunkUpgradeGUI.open(player, team);
     }
 
     @Override
