@@ -10,7 +10,7 @@ import org.bukkit.entity.Player;
 
 public class JoinTeamCommand extends SubCommand {
 
-    private TeamService teamService;
+    private final TeamService teamService;
 
     public JoinTeamCommand(String name, String description, String syntax, TeamService teamService) {
         super(name, description, syntax);
@@ -38,13 +38,12 @@ public class JoinTeamCommand extends SubCommand {
             String teamName = args[1];
             Team targetTeam = teamService.getTeamByName(teamName);
 
-            if (!teamService.isPlayerInAnyTeam(player)) {
+            if (!teamService.isPlayerInAnyTeam(player.getUniqueId())) {
                 if (targetTeam != null) {
                     ClaimedChunk claimedChunk = teamService.getClaimedChunkByTeamId(targetTeam.getTeamId());
 
                     teamService.addMember(targetTeam.getTeamId(), player);
                     teamService.applyBorderForPlayer(player, claimedChunk);
-//                    player.teleport(claimedChunk.getHome());
                 } else {
                     MessageUtils.sendError(player,  "Team " + teamName +" does not exist!");
                 }

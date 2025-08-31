@@ -9,7 +9,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 public class DisbandTeamCommand extends SubCommand {
-    private Team team;
     private TeamService teamService;
 
 

@@ -35,6 +35,12 @@ public class ChunkMainGUI {
     public void open() {
         this.teamService = ChunkBlock.getInstance().getTeamService();
         ClaimedChunk claimedChunk = teamService.getChunkByPlayer(player.getUniqueId());
+
+        if (!teamService.isPlayerInAnyTeam(player.getUniqueId())) {
+            MessageUtils.sendError(player, "You are not in a team! [1]");
+            return;
+        }
+
         if (claimedChunk == null) {
             MessageUtils.sendError(player, "§cChunk not found!");
             return;

@@ -2,16 +2,47 @@ package com.jasper.chunkBlock.commands.team;
 
 import com.jasper.chunkBlock.team.Team;
 import com.jasper.chunkBlock.commands.SubCommand;
+import com.jasper.chunkBlock.team.TeamService;
+import com.jasper.chunkBlock.util.MessageUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 public class LeaveTeamCommand extends SubCommand {
 
-    private Team team;
+    private TeamService teamService;
 
-    public LeaveTeamCommand(String name, String description, String syntax, Team team) {
+    public LeaveTeamCommand(String name, String description, String syntax, TeamService teamService) {
         super(name, description, syntax);
-        this.team = team;
+        this.teamService = teamService;
+    }
+
+    @Override
+    public void perform(Player player, String[] args) {
+        if (args.length > 1) {
+            String teamName = args[1];
+            Team team = teamService.getTeamByName(teamName); // Always fetch the team by name
+
+            if (team == null) {
+                MessageUtils.sendError(player, "Team does not exist!");
+                return;
+            }
+
+            if (!team.getMembersOfTeam().contains(player.getUniqueId())) {
+                MessageUtils.sendError(player, "You are not a member of this team!");
+                return;
+            }
+
+            if (team.getOwner().equals(player.getUniqueId())) {
+                MessageUtils.sendError(player, "You are the owner of this team, /c disband <team>");
+                return;
+            }
+
+            teamService.removeMember(teamName, player.getUniqueId());
+
+            player.sendMessage(ChatColor.GREEN + "You have left the team " + teamName + ".");
+        } else {
+            MessageUtils.sendInfo(player, "Please pecify a teamname!");
+        }
     }
 
     @Override
@@ -29,32 +60,4 @@ public class LeaveTeamCommand extends SubCommand {
         return "/c leave";
     }
 
-    @Override
-    public void perform(Player player, String[] args) {
-        if (args.length > 1) {
-            String teamName = args[1];
-//            Team team = teamStorage.getTeamByName(teamName); // Always fetch the team by name
-
-            if (team == null) {
-                player.sendMessage(ChatColor.RED + "Team does not exist.");
-                return;
-            }
-
-            if (!team.getMembersOfTeam().contains(player.getUniqueId())) {
-                player.sendMessage(ChatColor.RED + "You are not a member of this team.");
-                return;
-            }
-
-            if (team.getOwner().equals(player.getUniqueId())) {
-                player.sendMessage(ChatColor.RED + "You are the owner. Use /c disband to delete the team.");
-                return;
-            }
-
-//            teamStorage.removeMemberFromTeam(teamName, player.getUniqueId());
-//            borderStorage.removeBorder(player);
-            player.sendMessage(ChatColor.GREEN + "You have left the team " + teamName + ".");
-        } else {
-            player.sendMessage(ChatColor.RED + "Please specify a team name.");
-        }
-    }
 }

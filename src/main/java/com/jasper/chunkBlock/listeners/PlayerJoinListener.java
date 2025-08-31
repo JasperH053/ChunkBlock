@@ -30,7 +30,7 @@ public class PlayerJoinListener implements Listener {
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            if (!teamService.isPlayerInAnyTeam(player)) {
+            if (!teamService.isPlayerInAnyTeam(player.getUniqueId())) {
                 player.setWorldBorder(null);
                 return;
             }

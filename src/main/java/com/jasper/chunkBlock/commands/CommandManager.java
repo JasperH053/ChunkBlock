@@ -7,8 +7,10 @@ import com.jasper.chunkBlock.commands.chunk.ChunkSetHomeCommand;
 import com.jasper.chunkBlock.commands.chunk.ChunkUpgradeCommand;
 import com.jasper.chunkBlock.commands.team.*;
 import com.jasper.chunkBlock.commands.util.HulpCommand;
+import com.jasper.chunkBlock.commands.util.ShowTeams;
 import com.jasper.chunkBlock.team.Team;
 import com.jasper.chunkBlock.team.TeamService;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -16,6 +18,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class CommandManager implements CommandExecutor {
 
@@ -29,11 +32,12 @@ public class CommandManager implements CommandExecutor {
         subcommands.add(new HulpCommand("", "", "", this));
         subcommands.add(new CreateTeamCommand("", "", "", plugin, "", teamService));//        subcommands.add(new LeaveTeamCommand("","","",team, teamStorage,borderStorage));
         subcommands.add(new JoinTeamCommand("","","",teamService));
+        subcommands.add(new LeaveTeamCommand("","","",teamService));
         subcommands.add(new DisbandTeamCommand("","","",teamService));
         subcommands.add(new ChunkHomeCommand("","","", teamService));
         subcommands.add(new ChunkSetHomeCommand("","","",teamService));
 //        subcommands.add(new ChunkSettingsCommand("","","",team,teamStorage));
-//        subcommands.add(new ShowTeams("","","",teamStorage));
+        subcommands.add(new ShowTeams("","","",teamService));
         subcommands.add(new ChunkUpgradeCommand("", "", "",teamService));
     }
 
@@ -47,7 +51,8 @@ public class CommandManager implements CommandExecutor {
 
         if (label.equalsIgnoreCase("c")) {
             if (args.length == 0) {
-                if (team != null) {
+                if (teamService.isPlayerInAnyTeam(p.getUniqueId())) {
+                    Bukkit.getLogger().info(Arrays.toString(team.getMembersOfTeam().toArray()));
                     ChunkMainCommand c = new ChunkMainCommand();
                     c.open(p, teamService);
                 } else {

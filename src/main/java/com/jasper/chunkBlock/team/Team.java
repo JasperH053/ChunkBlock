@@ -1,13 +1,11 @@
 package com.jasper.chunkBlock.team;
 
+import com.jasper.chunkBlock.chunk.ClaimedChunk;
 import com.jasper.chunkBlock.util.MessageUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -37,14 +35,30 @@ public class Team {
         for (UUID uuid : members) {
             Player member = Bukkit.getPlayer(uuid);
             if (member != null && !member.getUniqueId().equals(player.getUniqueId())) {
-                member.sendMessage(player.getName() + " just joined " + teamName);
-                MessageUtils.sendInfo(member, "&f" + player.getName() +" &7Just joined party: " + teamName );
+                MessageUtils.sendSuccess(player,"&fYou just joined " + teamName + "!");
+                MessageUtils.sendInfo(member, "&f" + player.getName() +" &fJust joined party: " + teamName );
             }
         }
     }
 
+    public void onLeave(Player player) {
+        if (player == null) return;
+        for (UUID uuid : members) {
+            Player member = Bukkit.getPlayer(uuid);
+            if (member != null && !member.getUniqueId().equals(player.getUniqueId())) {
+                MessageUtils.sendSuccess(player,"&fYou just left " + teamName + "!");
+                MessageUtils.sendInfo(member, "&f" + player.getName() +" &fJust left party: " + teamName );
+            }
+        }
+        Bukkit.getLogger().info(Arrays.toString(members.toArray()));
+    }
+
     public void addMember(UUID member) {
         this.members.add(member);
+    }
+
+    public void removeMember(UUID member) {
+        this.members.remove(member);
     }
 
     public void setOwner(UUID owner) {

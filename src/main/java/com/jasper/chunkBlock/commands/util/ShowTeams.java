@@ -2,6 +2,7 @@ package com.jasper.chunkBlock.commands.util;
 
 import com.jasper.chunkBlock.commands.SubCommand;
 import com.jasper.chunkBlock.team.Team;
+import com.jasper.chunkBlock.team.TeamService;
 import com.jasper.chunkBlock.util.MessageUtils;
 import org.bukkit.entity.Player;
 
@@ -9,21 +10,20 @@ import java.util.Map;
 
 public class ShowTeams extends SubCommand {
 
-    TeamStorage teamStorage;
+    TeamService teamService;
 
-    public ShowTeams(String name, String description, String syntax, TeamStorage teamStorage) {
+    public ShowTeams(String name, String description, String syntax, TeamService teamService) {
         super(name, description, syntax);
-        this.teamStorage = teamStorage;
+        this.teamService = teamService;
     }
 
     @Override
     public void perform(Player player, String[] args) {
         int i = 0;
-        for (Map.Entry<String, Team> entry : teamStorage.getTeams().entrySet()) {
-            String teamName = entry.getKey();
+        for (Map.Entry<String, Team> entry : teamService.getTeams().entrySet()) {
             Team team = entry.getValue();
 
-            MessageUtils.sendInfo(player, teamName + ", &7" + team.getMembersOfTeam().size());
+            MessageUtils.sendInfo(player, team.getTeamName() + ", &7" + team.getMembersOfTeam().size());
             i++;
         }
         MessageUtils.sendSuccess(player, "Total amount of teams: &7" + i);

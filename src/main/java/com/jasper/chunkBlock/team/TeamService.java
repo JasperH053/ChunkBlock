@@ -14,6 +14,7 @@ import org.bukkit.entity.Player;
 import java.security.SecureRandom;
 
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -26,7 +27,6 @@ public class TeamService {
     private final ChunkStorage chunkStorage;
     private Map<String, Team> teamsById = new HashMap<>();
     private Map<UUID, Team> teamsByPlayer = new HashMap<>();
-    private final Map<String, ClaimedChunk> chunksByTeamId = new HashMap<>();
 
     public TeamService(Database database, ChunkStorage chunkStorage) {
         this.database = database;
@@ -54,44 +54,60 @@ public class TeamService {
     }
 
     public void loadAllTeams() {
-        try (PreparedStatement stmt = database.getConnectionF().prepareStatement("SELECT * FROM teams")) {
-            ResultSet rs = stmt.executeQuery();
+        // Leegmaken om dubbele entries te voorkomen bij reload
+        teamsById.clear();
+        teamsByPlayer.clear();
+        // (optioneel) chunkStorage ook legen als je die opnieuw opbouwt
+        // chunkStorage.clear();
+
+        String teamSql   = "SELECT teamid, owner, teamname FROM teams";
+        String memberSql = "SELECT member_uuid FROM team_members WHERE teamid = ?";
+
+        try (Connection con = database.getConnectionF();
+             PreparedStatement teamStmt = con.prepareStatement(teamSql);
+             PreparedStatement memberStmt = con.prepareStatement(memberSql);
+             ResultSet rs = teamStmt.executeQuery()) {
 
             while (rs.next()) {
                 String teamId = rs.getString("teamid");
-                String name = rs.getString("teamname");
-                UUID ownerUuid = UUID.fromString(rs.getString("owner"));
+                String name   = rs.getString("teamname");
 
+                String ownerStr = rs.getString("owner");
+                UUID ownerUuid = (ownerStr == null || ownerStr.isEmpty())
+                        ? null
+                        : UUID.fromString(ownerStr);
+
+                // Maak team en registreer in-memory
                 Team team = new Team(teamId, ownerUuid, name);
-                addTeam(team);
+                teamsById.put(teamId, team);
+                if (ownerUuid != null) {
+                    teamsByPlayer.put(ownerUuid, team); // ⬅️ owner óók indexeren
+                }
 
-                // Chunk direct ophalen via een DB-query
-                ClaimedChunk claimedChunk = loadChunkByTeamId(teamId); // Zorg dat je deze methode hebt
+                // Chunk(s) laden
+                ClaimedChunk claimedChunk = loadChunkByTeamId(teamId);
                 if (claimedChunk != null) {
                     chunkStorage.addClaimedChunk(teamId, claimedChunk);
                     try {
                         claimedChunk.loadHomeFromDb();
-                        Bukkit.getLogger().info("Loading home");
+                        Bukkit.getLogger().info("[ChunkBlock] Home geladen voor team " + teamId);
                     } catch (SQLException e) {
-                        throw new RuntimeException(e);
+                        Bukkit.getLogger().warning("[ChunkBlock] Fout bij loadHomeFromDb voor team " + teamId + ": " + e.getMessage());
                     }
                 } else {
                     Bukkit.getLogger().warning("[ChunkBlock] Geen chunk gevonden voor team " + teamId);
                 }
 
-                try (PreparedStatement memberStmt = database.getConnectionF().prepareStatement(
-                        "SELECT member_uuid FROM team_members WHERE teamid = ?")) {
-                    memberStmt.setString(1, teamId);
-                    ResultSet memberRs = memberStmt.executeQuery();
-
+                // Members voor dit team
+                memberStmt.clearParameters();
+                memberStmt.setString(1, teamId);
+                try (ResultSet memberRs = memberStmt.executeQuery()) {
                     while (memberRs.next()) {
                         UUID memberId = UUID.fromString(memberRs.getString("member_uuid"));
                         team.addMember(memberId);
-                        this.teamsByPlayer.put(memberId, team);
+                        teamsByPlayer.put(memberId, team); // ⬅️ members indexeren
                     }
                 }
-
-                this.teamsById.put(teamId, team);
             }
 
             Bukkit.getLogger().info("[ChunkBlock] Alle teams en leden geladen uit database.");
@@ -99,6 +115,7 @@ public class TeamService {
             e.printStackTrace();
         }
     }
+
 
     public ClaimedChunk loadChunkByTeamId(String teamId) {
         String sql = "SELECT * FROM chunks WHERE teamid = ?";
@@ -169,27 +186,17 @@ public class TeamService {
             for (UUID uuid : team.getMembersOfTeam()) {
                 Player player = Bukkit.getPlayer(uuid);
                 player.setWorldBorder(null);
+                teamsByPlayer.remove(uuid);
+                team.getMembersOfTeam().remove(player);
             }
 
             database.deleteTeam(team.getTeamId());
-            teamsByPlayer.remove(team.getOwner());
             teamsById.remove(team.getTeamId());
             chunkStorage.deleteChunk(team);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
         return true;
-    }
-
-    public void removeMemberFromTeam(Player player) {
-        Team team = getTeamByPlayer(player.getUniqueId());
-        ClaimedChunk claimedChunk = getChunkByPlayer(player.getUniqueId());
-        if (team == null) {
-            MessageUtils.sendError(player, "&f" + team.getTeamName() + "&7 does not exist.");
-            return;
-        }
-        database.removeMember(player);
-        applyBorderForPlayer(player,claimedChunk);
     }
 
     public ClaimedChunk getChunkByPlayer(UUID playerUuid) {
@@ -205,21 +212,31 @@ public class TeamService {
         return team;
     }
 
-    public boolean isPlayerInAnyTeam(Player player) {
-        return teamsByPlayer.containsKey(player.getUniqueId());
+    public synchronized boolean isPlayerInAnyTeam(UUID uuid) {
+        Team team = getTeamByPlayer(uuid);
+
+        if (team != null) {
+            if (team.getMembersOfTeam().contains(uuid)) {
+                return true;
+            }
+        } else {
+            return false;
+        }
+
+        return false;
     }
 
-
     public void applyBorderForPlayer(Player player, ClaimedChunk chunk) {
-        World world = Bukkit.getWorld(chunk.getWorld());
-
-        if (!isPlayerInAnyTeam(player)) {
+        if (chunk == null) {
             player.setWorldBorder(null);
+            MessageUtils.sendError(player, "Chunk does not exist!");
             return;
         }
 
+        World world = Bukkit.getWorld(chunk.getWorld());
+
         if (world == null ) {
-            player.sendMessage("§cDe wereld '" + chunk.getWorld() + "' bestaat niet!");
+            MessageUtils.sendError(player, "World does not exist!");
             return;
         }
 
@@ -257,30 +274,40 @@ public class TeamService {
         if (team == null) return false;
 
         database.addMember(teamId,player);
+        teamsByPlayer.put(player.getUniqueId(), team);
+        team.addMember(player.getUniqueId());
+        team.onJoin(player);
+
+        ClaimedChunk claimedChunk = getClaimedChunkByTeamId(team.getTeamId());
+        try {
+            claimedChunk.loadHomeFromDb();
+            Location home = claimedChunk.getHome();
+            player.teleport(home);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         return true;
     }
-//
-//    /**
-//     * Verwijder een member uit een team.
-//     */
-//    public boolean removeMember(String teamName, UUID member) {
-//        Team team = teamName;
-//
-//        UUID uuid = UUID.fromString(member.toString());
-//        Player player = Bukkit.getPlayer(uuid);
-//
-//        if (team == null) return false;
-//
-//        // Zorg dat je niet de owner verwijdert
-//        if (team.getOwner().equals(member)) {
-//            return false;
-//        } else if (player != null) {
-////            borderStorage.removeBorder(player);
-//        }
-//
-//        team.leaveTeam(member, teamStorage);  // implementeer in Team
-//        return true;
-//    }
+
+    public boolean removeMember(String teamName, UUID member) {
+        Team team = getTeamByName(teamName);
+        Player player = Bukkit.getPlayer(member);
+
+        if (team == null) return false;
+
+        if (team.getOwner().equals(member)) {
+            return false;
+        } else {
+            database.removeMember(player);
+            player.setWorldBorder(null);
+            team.removeMember(member);
+            team.onLeave(player);
+            teamsByPlayer.remove(player.getUniqueId(), team);
+        }
+
+        return true;
+    }
 //
 //    /**
 //     * Zoek het team waar deze speler in zit (owner of member).
@@ -295,7 +322,7 @@ public class TeamService {
 //    }
 
     public void addTeam(Team team) {
-        teamsById.put(team.getTeamName(), team);
+        teamsById.put(team.getTeamId(), team);
 
         List<String> memberUUIDStrings = team.getMembersOfTeam().stream()
                 .map(UUID::toString)
@@ -330,7 +357,7 @@ public class TeamService {
         return teamsById;
     }
 
-    public Team getTeamByPlayer(UUID uuid) {
+    public synchronized Team getTeamByPlayer(UUID uuid) {
         return teamsByPlayer.get(uuid);
     }
 
