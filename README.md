@@ -4,7 +4,7 @@ A modern chunk-based island/land-claim plugin inspired by SuperiorSkyblock and A
 
 ---
 
-## 🔧 Features
+## Features
 
 ### 1. Core System
 - ✅ Chunk-based private areas (no void islands)
