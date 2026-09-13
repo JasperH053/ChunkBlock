@@ -3,6 +3,7 @@ package com.jasper.chunkBlock;
 import com.jasper.chunkBlock.chunk.ChunkStorage;
 import com.jasper.chunkBlock.chunk.levels.LevelConfig;
 import com.jasper.chunkBlock.chunk.levels.LevelStorage;
+import com.jasper.chunkBlock.chunk.settings.SettingsManager;
 import com.jasper.chunkBlock.commands.CommandManager;
 import com.jasper.chunkBlock.database.Database;
 import com.jasper.chunkBlock.listeners.PlayerJoinListener;
@@ -26,14 +27,19 @@ public final class ChunkBlock extends JavaPlugin {
 
     private static ChunkBlock instance;
 
-    private FileConfiguration config;
+    private File settings;
+    private FileConfiguration settingsConfig;
     private File levelsConfig;
     private FileConfiguration levels;
+
+    // default
+    private FileConfiguration config;
 
     private Database database;
     private ChunkStorage chunkStorage;
     private TeamService teamService;
     private LevelStorage levelStorage;
+    private SettingsManager settingsManager;
 
 
     @Override
@@ -45,8 +51,9 @@ public final class ChunkBlock extends JavaPlugin {
         File configFile = new File(getDataFolder(), "config.yml");
         if (!configFile.exists()) saveDefaultConfig();
         config = YamlConfiguration.loadConfiguration(configFile);
-        createLevelsConfig();
 
+        createLevelsConfig();
+        createSettingsConfig();
 
         // Database connectie opzetten
         try {
@@ -62,8 +69,11 @@ public final class ChunkBlock extends JavaPlugin {
         // Services initialiseren
         this.chunkStorage = new ChunkStorage();
         this.teamService = new TeamService(database, this.chunkStorage);
-        teamService.loadAllTeams();
         this.levelStorage = new LevelStorage(this);
+        this.settingsManager = new SettingsManager(this);
+
+        teamService.loadAllTeams();
+        settingsManager.loadFromConfig();
 
         // Commands & events registreren
         getCommand("c").setExecutor(new CommandManager(this, teamService));
@@ -97,16 +107,31 @@ public final class ChunkBlock extends JavaPlugin {
         }
     }
 
+    private void createSettingsConfig() {
+        settings = new File(getDataFolder(), "settings.yml");
+        if (!settings.exists()) {
+            settings.getParentFile().mkdirs();
+            saveResource("settings.yml", false);
+        }
+
+        settingsConfig = new YamlConfiguration();
+        try {
+            settingsConfig.load(settings);
+        } catch (IOException | InvalidConfigurationException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public FileConfiguration getSettingsConfig() {
+        return this.settingsConfig;
+    }
+
     public LevelStorage getLevelStorage() {
         return levelStorage;
     }
 
     public static ChunkBlock getInstance() {
         return instance;
-    }
-
-    public FileConfiguration getCustomConfig() {
-        return config;
     }
 
     public FileConfiguration getLevelsConfig() {
@@ -120,6 +145,9 @@ public final class ChunkBlock extends JavaPlugin {
     public TeamService getTeamService() {
         return teamService;
     }
+
+    public SettingsManager getSettingsManager() { return settingsManager; }
+
 
     public ChunkStorage getChunkStorage() {
         return chunkStorage;

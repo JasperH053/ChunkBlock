@@ -6,9 +6,11 @@ import com.github.stefvanschie.inventoryframework.pane.OutlinePane;
 import com.github.stefvanschie.inventoryframework.pane.Pane;
 import com.github.stefvanschie.inventoryframework.pane.PatternPane;
 import com.github.stefvanschie.inventoryframework.pane.util.Pattern;
+import com.github.stefvanschie.inventoryframework.pane.util.Slot;
 import com.jasper.chunkBlock.ChunkBlock;
 import com.jasper.chunkBlock.chunk.ChunkStorage;
 import com.jasper.chunkBlock.chunk.ClaimedChunk;
+import com.jasper.chunkBlock.chunk.settings.SettingsManager;
 import com.jasper.chunkBlock.database.Database;
 import com.jasper.chunkBlock.team.Team;
 import com.jasper.chunkBlock.util.MessageUtils;
@@ -20,12 +22,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-
 public class ChunkMainGUI {
 
     private Player player;
     private final Team team;
     private TeamService teamService;
+    private final SettingsManager settingsManager = ChunkBlock.getInstance().getSettingsManager();
 
     public ChunkMainGUI(Player player, Team team) {
         this.player = player;
@@ -48,15 +50,20 @@ public class ChunkMainGUI {
 
         ChestGui gui = new ChestGui(5, "Chunk - Menu");
         gui.setOnGlobalClick(event -> event.setCancelled(true));
-        PatternPane paneel = new PatternPane(0, 0, 9, 5, patroon);
 
-        // FILLER PANE
-        OutlinePane background = new OutlinePane(0, 0, 9, 5, Pane.Priority.LOWEST);
+        // AANGEPAST: Posities (0, 0) verwijderd uit constructor
+        PatternPane paneel = new PatternPane(9, 5, patroon);
+
+        // AANGEPAST: Posities (0, 0) verwijderd uit constructor
+        OutlinePane background = new OutlinePane(9, 5, Pane.Priority.LOWEST);
         background.addItem(new GuiItem(new ItemStack(Material.BLUE_STAINED_GLASS_PANE)));
         background.setRepeat(true);
 
-        OutlinePane navigationPane = new OutlinePane(1, 1, 3, 3);
-        OutlinePane circleCenter = new OutlinePane(6,2,1,1, Pane.Priority.HIGH);
+        // AANGEPAST: Posities (1, 1) verwijderd uit constructor
+        OutlinePane navigationPane = new OutlinePane(3, 3);
+
+        // AANGEPAST: Posities (6, 2) verwijderd uit constructor
+        OutlinePane circleCenter = new OutlinePane(1, 1, Pane.Priority.HIGH);
 
         // HOME BUTTON
         ItemStack shop = new ItemStack(Material.OAK_DOOR);
@@ -75,7 +82,7 @@ public class ChunkMainGUI {
         settingsMeta.setDisplayName("Chunk - Settings");
         settings.setItemMeta(settingsMeta);
         navigationPane.addItem(new GuiItem(settings, event -> {
-            ChunkSettingsGUI ch = new ChunkSettingsGUI(player, team, claimedChunk);
+            ChunkSettingsGUI ch = new ChunkSettingsGUI(player, team, claimedChunk,settingsManager);
             ch.open();
         }));
 
@@ -132,10 +139,12 @@ public class ChunkMainGUI {
         // FILLER CIRCLE
         paneel.bindItem('1', new GuiItem(new ItemStack(Material.GRAY_STAINED_GLASS_PANE)));
 
-        gui.addPane(background);
-        gui.addPane(navigationPane);
-        gui.addPane(paneel);
-        gui.addPane(circleCenter);
+        // AANGEPAST: Panes toegevoegd met een startpositie via Slot.fromXY(x, y)
+        gui.addPane(Slot.fromXY(0, 0), background);
+        gui.addPane(Slot.fromXY(1, 1), navigationPane);
+        gui.addPane(Slot.fromXY(0, 0), paneel);
+        gui.addPane(Slot.fromXY(6, 2), circleCenter);
+
         gui.show(player);
     }
 

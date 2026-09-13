@@ -3,6 +3,7 @@ package com.jasper.chunkBlock.gui.base;
 import com.github.stefvanschie.inventoryframework.gui.GuiItem;
 import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
 import com.github.stefvanschie.inventoryframework.pane.StaticPane;
+import com.github.stefvanschie.inventoryframework.pane.util.Slot;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -20,7 +21,9 @@ public abstract class ConfirmationGUI {
 
     public void open() {
         ChestGui gui = new ChestGui(3, title);
-        StaticPane pane = new StaticPane(0, 1, 9, 1);
+
+        // AANGEPAST: Posities (0, 1) verwijderd uit constructor
+        StaticPane pane = new StaticPane(9, 1);
 
         // YES button (green)
         ItemStack yesItem = new ItemStack(Material.LIME_CONCRETE);
@@ -28,11 +31,12 @@ public abstract class ConfirmationGUI {
         yesMeta.setDisplayName("§aYes");
         yesItem.setItemMeta(yesMeta);
 
+        // AANGEPAST: Posities (2, 0) verpakt in Slot.fromXY
         pane.addItem(new GuiItem(yesItem, event -> {
             event.setCancelled(true);
             player.closeInventory();
             onConfirm();
-        }), 2, 0);
+        }), Slot.fromXY(2, 0));
 
         // NO button (red)
         ItemStack noItem = new ItemStack(Material.RED_CONCRETE);
@@ -40,13 +44,15 @@ public abstract class ConfirmationGUI {
         noMeta.setDisplayName("§cNo");
         noItem.setItemMeta(noMeta);
 
+        // AANGEPAST: Posities (6, 0) verpakt in Slot.fromXY
         pane.addItem(new GuiItem(noItem, event -> {
             event.setCancelled(true);
             player.closeInventory();
             onDeny();
-        }), 6, 0);
+        }), Slot.fromXY(6, 0));
 
-        gui.addPane(pane);
+        // AANGEPAST: gui.addPane geplaatst op rij 1 (y: 1) via Slot.fromXY
+        gui.addPane(Slot.fromXY(0, 1), pane);
         gui.show(player);
     }
 

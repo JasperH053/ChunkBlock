@@ -84,7 +84,7 @@ public class Database {
             ps.setString(3, claimedChunk.getOwner().toString());
             ps.setInt(4, claimedChunk.getLevel());
             ps.setDouble(5, claimedChunk.getXp());
-            ps.setString(6, claimedChunk.getWorld());
+            ps.setString(6, claimedChunk.getWorldName());
 
             if (claimedChunk.getHome() == null) {
                 ps.setNull(7, Types.INTEGER);
@@ -220,7 +220,7 @@ public class Database {
         try (Connection con = getConnectionF();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, newLevel);
-            ps.setString(2, chunk.getWorld());
+            ps.setString(2, chunk.getWorldName());
             ps.setInt(3, chunk.getX());
             ps.setInt(4, chunk.getZ());
             ps.executeUpdate();

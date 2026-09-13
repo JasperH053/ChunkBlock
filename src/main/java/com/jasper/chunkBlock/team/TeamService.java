@@ -49,6 +49,7 @@ public class TeamService {
 
         database.addTeam(team);
         chunkStorage.createChunk(team, chunkId, world, player);
+        applyBorders(team);
 
         return team;
     }
@@ -233,39 +234,13 @@ public class TeamService {
             return;
         }
 
-        World world = Bukkit.getWorld(chunk.getWorld());
+        World world = Bukkit.getWorld(chunk.getWorldName());
 
         if (world == null ) {
             MessageUtils.sendError(player, "World does not exist!");
             return;
         }
-
-        int centerX = chunk.getX();
-        int centerZ = chunk.getZ();
-        int centerY = world.getHighestBlockYAt(centerX, centerZ);
-
-        Location center = new Location(world, centerX, centerY, centerZ);
-
-        player.sendMessage("§7[DEBUG] Border center op: " + centerX + ", " + centerZ + " in wereld '" + world.getName() + "'");
-        player.sendMessage("§7[DEBUG] Spelerlocatie: " + player.getLocation().getBlockX() + ", " + player.getLocation().getBlockZ());
-
-        WorldBorder border = Bukkit.createWorldBorder();
-        border.setCenter(center);
-
-        int radius = chunk.getClaimRadius(); // bijv. 1
-        int level = chunk.getLevel();        // bijv. 1
-        double size = radius; // diameter in blokken
-
-        player.sendMessage("§7[DEBUG] Border size (diameter): " + size);
-
-        border.setSize(size);
-        border.setWarningDistance(5);
-        border.setDamageAmount(0.5);
-        border.setDamageBuffer(1);
-
-        player.setWorldBorder(border);
-
-        player.sendMessage("§a[DEBUG] Border succesvol toegepast!");
+        chunk.createBorder(player);
     }
 
 
@@ -279,14 +254,15 @@ public class TeamService {
         team.onJoin(player);
 
         ClaimedChunk claimedChunk = getClaimedChunkByTeamId(team.getTeamId());
-        try {
-            claimedChunk.loadHomeFromDb();
-            Location home = claimedChunk.getHome();
-            player.teleport(home);
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (claimedChunk != null) {
+            try {
+                claimedChunk.loadHomeFromDb();
+                Location home = claimedChunk.getHome();
+                player.teleport(home);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
-
         return true;
     }
 
@@ -308,18 +284,6 @@ public class TeamService {
 
         return true;
     }
-//
-//    /**
-//     * Zoek het team waar deze speler in zit (owner of member).
-//     */
-//    public Team getTeamFromPlayer(UUID playerUUID) {
-//        for (Team team : teamStorage.getTeams().values()) { // teams is je Map<String, Team>
-//            if (team.getMembersOfTeam().contains(playerUUID)) {
-//                return team;
-//            }
-//        }
-//        return null;
-//    }
 
     public void addTeam(Team team) {
         teamsById.put(team.getTeamId(), team);

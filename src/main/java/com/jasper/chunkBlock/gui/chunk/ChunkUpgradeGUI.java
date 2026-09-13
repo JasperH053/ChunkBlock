@@ -1,13 +1,13 @@
 package com.jasper.chunkBlock.gui.chunk;
 
 import com.github.stefvanschie.inventoryframework.gui.GuiItem;
-import com.github.stefvanschie.inventoryframework.pane.*;
+import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
+import com.github.stefvanschie.inventoryframework.pane.StaticPane;
+import com.github.stefvanschie.inventoryframework.pane.util.Slot;
 import com.jasper.chunkBlock.ChunkBlock;
 import com.jasper.chunkBlock.chunk.ClaimedChunk;
-import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
 import com.jasper.chunkBlock.chunk.levels.LevelConfig;
 import com.jasper.chunkBlock.chunk.levels.LevelStorage;
-import com.jasper.chunkBlock.database.Database;
 import com.jasper.chunkBlock.team.Team;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -16,8 +16,8 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import java.util.Collections;
 
+import java.util.Collections;
 
 public class ChunkUpgradeGUI {
 
@@ -27,10 +27,9 @@ public class ChunkUpgradeGUI {
     private ClaimedChunk claimedChunk;
     LevelStorage levelStorage = ChunkBlock.getInstance().getLevelStorage();
 
-
     private static final int TOTAL_LEVELS = 50;
 
-    public ChunkUpgradeGUI(Player player, Team team, ClaimedChunk claimedChunk ) {
+    public ChunkUpgradeGUI(Player player, Team team, ClaimedChunk claimedChunk) {
         this.player = player;
         this.team = team;
         this.claimedChunk = claimedChunk;
@@ -42,16 +41,18 @@ public class ChunkUpgradeGUI {
 
         ChestGui gui = new ChestGui(6, ChatColor.DARK_GRAY + "Chunk - Upgrade");
         gui.setOnGlobalClick(event -> event.setCancelled(true));
-        StaticPane levelPane = new StaticPane(0, 0, 9, 5);
-        StaticPane blueFiller = new StaticPane(0, 0, 9, 6);
+
+        // AANGEPAST: Posities (0, 0) verwijderd uit constructor
+        StaticPane levelPane = new StaticPane(9, 5);
+        StaticPane blueFiller = new StaticPane(9, 6);
 
         int[][] blueFillerPattern = {
                 {6},
-                {0,1,2,3,4,6},
+                {0, 1, 2, 3, 4, 6},
                 {6},
-                {1,2,3,4,5,6},
+                {1, 2, 3, 4, 5, 6},
                 {6},
-                {1,2,3,5,6,7,8}
+                {1, 2, 3, 5, 6, 7, 8}
         };
 
         int[][] snakePattern = {
@@ -83,7 +84,8 @@ public class ChunkUpgradeGUI {
                 item.setItemMeta(meta);
 
                 GuiItem guiItem = new GuiItem(item);
-                levelPane.addItem(guiItem, posX, y);
+                // AANGEPAST: addItem gebruikt nu Slot.fromXY(x, y)
+                levelPane.addItem(guiItem, Slot.fromXY(posX, y));
 
                 levelCount++;
             }
@@ -99,17 +101,17 @@ public class ChunkUpgradeGUI {
                 item.setItemMeta(meta);
 
                 GuiItem guiItem = new GuiItem(item);
-                blueFiller.addItem(guiItem, posX, y);
+                // AANGEPAST: addItem gebruikt nu Slot.fromXY(x, y)
+                blueFiller.addItem(guiItem, Slot.fromXY(posX, y));
             }
         }
 
-
-        // Progress bar pane
-        StaticPane progressPane = new StaticPane(0, 5, 9, 1);
+        // AANGEPAST: Posities (0, 5) verwijderd uit constructor
+        StaticPane progressPane = new StaticPane(9, 1);
 
         ItemStack progressItem = new ItemStack(Material.BOOK);
         ItemMeta progressMeta = progressItem.getItemMeta();
-        progressMeta.setDisplayName(ChatColor.WHITE + "Level -> " + ChatColor.GRAY +  currentLevel);
+        progressMeta.setDisplayName(ChatColor.WHITE + "Level -> " + ChatColor.GRAY + currentLevel);
 
         int percentage = (int) (((double) currentLevel / TOTAL_LEVELS) * 100);
         StringBuilder bar = new StringBuilder();
@@ -130,21 +132,24 @@ public class ChunkUpgradeGUI {
         progressItem.setItemMeta(progressMeta);
 
         GuiItem progressGuiItem = new GuiItem(progressItem);
-        progressPane.addItem(progressGuiItem, 4, 0);
+        // AANGEPAST: addItem gebruikt nu Slot.fromXY(x, y)
+        progressPane.addItem(progressGuiItem, Slot.fromXY(4, 0));
 
         ItemStack barrier = new ItemStack(Material.BARRIER);
         ItemMeta meta = barrier.getItemMeta();
         meta.setDisplayName("§cBack");
         barrier.setItemMeta(meta);
 
+        // AANGEPAST: addItem gebruikt nu Slot.fromXY(x, y)
         progressPane.addItem(new GuiItem(barrier, event -> {
             ChunkMainGUI ch = new ChunkMainGUI(player, team);
             ch.open();
-        }), 0, 0);
+        }), Slot.fromXY(0, 0));
 
-        gui.addPane(blueFiller);  // eerst achtergrond
-        gui.addPane(levelPane);   // dan levels erbovenop
-        gui.addPane(progressPane);// progressbar helemaal bovenaan
+        // AANGEPAST: gui.addPane gebruikt nu Slot.fromXY(x, y) als eerste argument
+        gui.addPane(Slot.fromXY(0, 0), blueFiller);   // eerst achtergrond
+        gui.addPane(Slot.fromXY(0, 0), levelPane);    // dan levels erbovenop
+        gui.addPane(Slot.fromXY(0, 5), progressPane); // progressbar helemaal onderaan op rij 5
 
         gui.show(player);
     }
@@ -152,6 +157,4 @@ public class ChunkUpgradeGUI {
     public int getTeamLevel() {
         return team.getLevel();
     }
-
-
 }

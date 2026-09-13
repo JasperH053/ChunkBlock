@@ -1,7 +1,12 @@
 package com.jasper.chunkBlock.chunk;
 
 import com.jasper.chunkBlock.ChunkBlock;
-import com.jasper.chunkBlock.chunk.settings.SettingType;
+import com.jasper.chunkBlock.chunk.settings.Setting;
+import com.jasper.chunkBlock.chunk.settings.SettingsManager;
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldguard.WorldGuard;
+import com.sk89q.worldguard.protection.managers.RegionManager;
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -31,7 +36,7 @@ public class ClaimedChunk {
     private int level;
     private double xp;
     private final Map<String, Object> upgrades = new HashMap<>();
-    private final Map<SettingType, Boolean> settings = new HashMap<>();
+    private final Map<String, Boolean> settings = new HashMap<>();
 
     public ClaimedChunk(String chunkid, String teamid, String ownerUuid, int level, String world, int homeX, int homeY, int homeZ, int centerX, int centerZ, int borderRadius) {
         this.world = world;
@@ -41,51 +46,93 @@ public class ClaimedChunk {
         this.z = centerZ;
         this.teamId = teamid;
         this.chunkId = chunkid;
-        this.xp = xp;
+        this.xp = 0.0;
+        this.homeX = homeX;
+        this.homeY = homeY;
+        this.homeZ = homeZ;
         this.level = level;
-        for (SettingType type : SettingType.values()) {
-            settings.put(type, false);
+        for (Setting setting : ChunkBlock.getInstance().getSettingsManager().getAvailableSettings().values()) {
+            settings.put(setting.getId(), setting.isDefaultValue());
         }
     }
 
-    public Location getCenter(ClaimedChunk claimedChunk) {
-        World w = Bukkit.getWorld(world);
+    public Location getCenter() {
+        World w = Bukkit.getWorld(this.world);
         if (w == null) {
-            throw new IllegalStateException("World not found! : " + world);
+            throw new IllegalStateException("World not found! : " + this.world);
         }
 
-        // Y-waarde kan je zo laten of ook uit db halen als je dat wilt
-        double y = 64;
+        // 1. Vermenigvuldig de chunk-coördinaat met 16 om bij het startblok te komen
+        // 2. Tel er 8 bij op om exact in het midden (center) van de 16x16 chunk te staan
+        double centerX = (this.x * 16) + 8.0;
+        double centerZ = (this.z * 16) + 8.0;
 
-        return new Location(w, x, y, z);
+        // Tip: In plaats van vast op y=64, kun je het hoogste blok opzoeken
+        // zodat een speler bij /c sethome niet in de grond vast komt te zitten!
+        double y = w.getHighestBlockYAt((int) centerX, (int) centerZ) + 1.0;
+
+        return new Location(w, centerX, y, centerZ);
     }
-
 
     public WorldBorder createBorder(Player player) {
         WorldBorder border = Bukkit.createWorldBorder();
-        Location location = player.getLocation();
 
-        border.setCenter(location);
-        border.setSize(level * radius * 2); // 32 blokken per chunk, *2 voor diameter
+        // 1. Bereken de grote blok-coördinaten
+        double centerBlockX = (this.x * 16) + 8.0;
+        double centerBlockZ = (this.z * 16) + 8.0;
+
+        // 2. Geef uitsluitend de zojuist berekende, grote getallen door
+        border.setCenter(centerBlockX, centerBlockZ);
+
+        // 3. Forceer de grootte op 16 (1 chunk)
+        border.setSize(16.0);
 
         player.setWorldBorder(border);
+        this.worldBorder = border;
+
+        // Debug bericht ter verificatie
+        player.sendMessage("§a[DEBUG] Border berekend op blokken: " + centerBlockX + ", " + centerBlockZ);
+
         return border;
     }
 
-    public WorldBorder removeBorder() {
-        return worldBorder = null;
+
+    public ProtectedRegion getRegion() {
+        World bukkitWorld = Bukkit.getWorld(this.world); // Gebruik jouw eigen world String
+        if (bukkitWorld == null) return null;
+
+        RegionManager manager = WorldGuard.getInstance()
+                .getPlatform()
+                .getRegionContainer()
+                .get(BukkitAdapter.adapt(bukkitWorld));
+
+        if (manager == null) return null;
+
+        String regionId = "team_" + this.teamId; // Zorg dat this.teamId klopt met jouw variabelenaam
+        return manager.getRegion(regionId);
     }
 
+    public void removeBorder(Player player) {
+        player.setWorldBorder(null);
+        this.worldBorder = null;
+    }
 
-    public String getWorld() { return world; }
+    // database
+    public String getWorldName() {
+        return this.world;
+    }
+
+    public org.bukkit.World getWorld() {
+        return org.bukkit.Bukkit.getWorld(this.world);
+    }
     public int getX() { return x; }
     public int getZ() { return z; }
     public String getTeamId() { return teamId; }
     public int getLevel() { return level; }
     public double getXp() { return xp; }
-    public boolean isSettingEnabled(SettingType type) { return settings.getOrDefault(type, false); }
+    public boolean isSettingEnabled(SettingsManager type) { return settings.getOrDefault(type, false); }
     public Map<String, Object> getUpgrades() { return upgrades; }
-    public Map<SettingType, Boolean> getSettings() { return settings; }
+    public Map<String, Boolean> getSettings() { return settings; }
 
     public Location getHome() {
         return home;
@@ -158,12 +205,20 @@ public class ClaimedChunk {
     public String getChunkId() {
         return chunkId;
     }
-    public void toggleSetting(SettingType type) {
-        settings.put(type, !isSettingEnabled(type));
+    public void toggleSetting(Setting setting) {
+        String id = setting.getId();
+        boolean currentState = settings.getOrDefault(id, setting.isDefaultValue());
+        settings.put(id, !currentState);
     }
-    public void setSetting(SettingType type, boolean value) {
-        settings.put(type, value);
+    public boolean isSettingEnabled(String settingId) {
+        return settings.getOrDefault(settingId, false);
     }
+
+    public void setSetting(String settingId, boolean value) {
+        settings.put(settingId, value);
+    }
+
+
     public void setHome(Location location) {
         home = location;
     }

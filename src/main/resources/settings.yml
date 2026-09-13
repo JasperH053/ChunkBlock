@@ -1,0 +1,7 @@
+flags:
+  pvp:
+    name: "&cPvP On/Off"
+    material: "DIAMOND_SWORD"
+  tnt:
+    name: "&cTNT On/Off"
+    material: "tntz"
