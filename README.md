@@ -1,4 +1,4 @@
-# 🌐 ChunkBlock
+# ChunkBlock
 
 A modern chunk-based island/land-claim plugin inspired by SuperiorSkyblock and ASkyBlock, but designed for land-based gameplay using Minecraft chunks.
 
@@ -21,28 +21,28 @@ A modern chunk-based island/land-claim plugin inspired by SuperiorSkyblock and A
 
 ### 2. Chunk Claiming & Management
 
-#### 📦 Claim System
+#### Claim System
 - Claim adjacent chunks
 - Expand claim radius through upgrades or leveling
 - Automatic protection for claimed chunks
 - Set a maximum number of claims per player/team
 
-#### 🔐 Chunk Protection
+#### Chunk Protection
 - Restrict block breaking/placing for outsiders
 - Control player/mob damage
 - PvP toggle per chunk
 - Interaction toggle (doors, levers, buttons)
 
-#### 👥 Access Management
+#### Access Management
 - Add/remove players to claimed chunks
 - Role system: Owner, Co-Owner, Member
 - Public/private chunk status
 - Whitelist/blacklist players from chunks
 
-#### 🔨 Chunk Reset
+#### Chunk Reset
 - Reset a chunk to default state
 
-#### 🗺️ Chunk Visualization
+#### Chunk Visualization
 - GUI-based chunk map
 - *(Optional)* Dynmap / BlueMap integration for chunk visuals
 
@@ -50,22 +50,22 @@ A modern chunk-based island/land-claim plugin inspired by SuperiorSkyblock and A
 
 ### 3. Economy & Upgrades
 
-#### 💰 Chunk Upgrades
+#### Chunk Upgrades
 - Expand claim radius
 - Faster crop growth
 - Boosted mob spawn rates
 - Increased ore/resource generation
 - Chunk-only power-ups
 
-#### 🛡️ Protection Upgrades
+#### Protection Upgrades
 - Temporarily disable mob spawning, PvP, etc.
 
-#### 🏷️ Shop System *(Optional)*
+#### Shop System *(Optional)*
 - Buy chunk expansions
 - Purchase resources & boosters
 - GUI-based shop interface
 
-#### 📈 Leveling System
+#### Leveling System
 - Gain levels through placed blocks, kills, and quests
 - Leaderboards & rankings
 - Unlock special rewards, cosmetics, and expansions
@@ -74,12 +74,12 @@ A modern chunk-based island/land-claim plugin inspired by SuperiorSkyblock and A
 
 ### 4. Quests & Challenges
 
-#### 📜 Chunk Quests
+#### Chunk Quests
 - Gather specific blocks in your chunks
 - Kill mobs within your chunks
 - Complete chunk-specific events
 
-#### 🎁 Rewards
+#### Rewards
 - Money
 - Extra claim slots
 - Special items & cosmetics
@@ -88,7 +88,7 @@ A modern chunk-based island/land-claim plugin inspired by SuperiorSkyblock and A
 
 ### 5. Team System *(Optional)*
 
-#### 👥 Teams
+#### Teams
 - Create and manage teams
 - Roles: Owner, Admin, Member
 - Team chat support
@@ -99,12 +99,12 @@ A modern chunk-based island/land-claim plugin inspired by SuperiorSkyblock and A
 
 ### 6. Mob & Entity Management
 
-#### 🧟 Spawn Control
+#### Spawn Control
 - Enable/disable mob spawning per chunk
 - Separate passive and hostile mob controls
 - Increase spawn rates with upgrades
 
-#### 🛑 Entity Interaction Restrictions
+#### Entity Interaction Restrictions
 - Protect armor stands, item frames, and animals
 - Prevent unauthorized interaction
 
@@ -112,12 +112,12 @@ A modern chunk-based island/land-claim plugin inspired by SuperiorSkyblock and A
 
 ### 7. GUIs & Commands
 
-#### 📂 GUI Menus
+#### GUI Menus
 - Chunk claiming and management
 - Upgrades & boosters
 - Access permissions
 
-#### 🖥️ Core Commands
+#### Core Commands
 ```bash
 /chunkblock create           # Create your first chunk
 /chunkblock claim            # Claim adjacent chunk
