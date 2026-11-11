@@ -8,14 +8,6 @@ public class Setting {
     private int guiSlot;
     private boolean defaultValue;
 
-    public Setting(String id, String displayName, String material, int guiSlot, boolean defaultValue) {
-        this.id = id;
-        this.displayName = displayName;
-        this.material = material;
-        this.guiSlot = guiSlot;
-        this.defaultValue = defaultValue;
-    }
-
     public Setting(String id, String displayName, String material) {
         this.id = id;
         this.displayName = displayName;

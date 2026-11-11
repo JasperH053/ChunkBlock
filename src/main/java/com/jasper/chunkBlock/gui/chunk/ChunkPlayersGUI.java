@@ -43,7 +43,9 @@ public class ChunkPlayersGUI {
     public void open() {
         ChestGui gui = new ChestGui(4, "Chunk - Players");
 
-        // AANGEPAST: Posities (0, 0) verwijderd uit de constructors
+        gui.setOnGlobalClick(event -> event.setCancelled(true));
+        gui.setOnGlobalDrag(event -> event.setCancelled(true));
+
         PaginatedPane pages = new PaginatedPane(9, 3);
         OutlinePane settingsPane = new OutlinePane(9, 3);
 
@@ -77,7 +79,6 @@ public class ChunkPlayersGUI {
         pages.addPane(0, Slot.fromXY(0, 0), settingsPane);
         gui.addPane(Slot.fromXY(0, 0), pages);
 
-        // AANGEPAST: Posities (0, 3) verwijderd uit de constructor
         OutlinePane background = new OutlinePane(9, 1);
         background.addItem(new GuiItem(new ItemStack(Material.BLACK_STAINED_GLASS_PANE)));
         background.setRepeat(true);
@@ -85,10 +86,8 @@ public class ChunkPlayersGUI {
 
         gui.addPane(Slot.fromXY(0, 3), background);
 
-        // AANGEPAST: Posities (0, 3) verwijderd uit de constructor
         StaticPane navigation = new StaticPane(9, 1);
 
-        // AANGEPAST: Slots toegevoegd via Slot.fromXY(x, y)
         navigation.addItem(new GuiItem(new ItemStack(Material.RED_WOOL), event -> {
             if (pages.getPage() > 0) {
                 pages.setPage(pages.getPage() - 1);

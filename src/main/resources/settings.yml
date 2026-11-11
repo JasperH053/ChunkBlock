@@ -1,7 +1,223 @@
+# Alle aan/uit-instellingen voor een chunk. Elke key is exact de WorldGuard-flagnaam,
+# zodat je hem direct kunt opzoeken met WorldGuard.getInstance().getFlagRegistry().get(key).
+#
+# Let op: fire-spread, water-flow, lava-flow en lava-fire werken alleen als
+# "high frequency flags" aan staat in de WorldGuard-config.
+
 flags:
+
+  # ---------------------------------------------------------------
+  # Bezoekers
+  # ---------------------------------------------------------------
+  entry:
+    name: "&eBezoekers toegestaan On/Off"
+    material: "OAK_FENCE_GATE"
+  interact:
+    name: "&eInteractie On/Off"
+    material: "LEVER"
+  block-break:
+    name: "&eBlokken breken On/Off"
+    material: "DIAMOND_PICKAXE"
+  block-place:
+    name: "&eBlokken plaatsen On/Off"
+    material: "BRICKS"
+  use:
+    name: "&eDeuren & knoppen On/Off"
+    material: "OAK_DOOR"
+  chest-access:
+    name: "&eKisten openen On/Off"
+    material: "CHEST"
+  damage-animals:
+    name: "&eDieren aanvallen On/Off"
+    material: "COOKED_BEEF"
+  ride:
+    name: "&eRijden op dieren/voertuigen On/Off"
+    material: "SADDLE"
+  sleep:
+    name: "&eSlapen On/Off"
+    material: "RED_BED"
+  respawn-anchors:
+    name: "&eRespawn anchors On/Off"
+    material: "RESPAWN_ANCHOR"
+  vehicle-place:
+    name: "&eVoertuigen plaatsen On/Off"
+    material: "MINECART"
+  vehicle-destroy:
+    name: "&eVoertuigen slopen On/Off"
+    material: "OAK_BOAT"
+  lighter:
+    name: "&eAansteker On/Off"
+    material: "FLINT_AND_STEEL"
+  item-frame-rotation:
+    name: "&eItem frames draaien On/Off"
+    material: "ITEM_FRAME"
+  use-anvil:
+    name: "&eAnvil gebruiken On/Off"
+    material: "ANVIL"
+  use-dripleaf:
+    name: "&eDripleaf gebruiken On/Off"
+    material: "BIG_DRIPLEAF"
+  block-trampling:
+    name: "&eGewassen vertrappen On/Off"
+    material: "WHEAT_SEEDS"
+  frosted-ice-form:
+    name: "&eFrost Walker ijs On/Off"
+    material: "DIAMOND_BOOTS"
+
+  # ---------------------------------------------------------------
+  # Gevecht
+  # ---------------------------------------------------------------
   pvp:
     name: "&cPvP On/Off"
     material: "DIAMOND_SWORD"
+  mob-damage:
+    name: "&cMob schade On/Off"
+    material: "ZOMBIE_HEAD"
+  fall-damage:
+    name: "&cValschade On/Off"
+    material: "FEATHER"
+  firework-damage:
+    name: "&cVuurwerk schade On/Off"
+    material: "FIREWORK_ROCKET"
+  potion-splash:
+    name: "&cSplash potions On/Off"
+    material: "SPLASH_POTION"
+
+  # ---------------------------------------------------------------
+  # Explosies & griefing
+  # ---------------------------------------------------------------
   tnt:
-    name: "&cTNT On/Off"
-    material: "tntz"
+    name: "&6TNT On/Off"
+    material: "TNT"
+  creeper-explosion:
+    name: "&6Creeper explosies On/Off"
+    material: "CREEPER_HEAD"
+  ghast-fireball:
+    name: "&6Ghast vuurballen On/Off"
+    material: "FIRE_CHARGE"
+  other-explosion:
+    name: "&6Overige explosies On/Off"
+    material: "GUNPOWDER"
+  wither-damage:
+    name: "&6Wither schade On/Off"
+    material: "WITHER_SKELETON_SKULL"
+  enderdragon-block-damage:
+    name: "&6Enderdragon blokschade On/Off"
+    material: "DRAGON_HEAD"
+  enderman-grief:
+    name: "&6Endermen pakken blokken On/Off"
+    material: "ENDERMAN_SPAWN_EGG"
+  ravager-grief:
+    name: "&6Ravager griefing On/Off"
+    material: "RAVAGER_SPAWN_EGG"
+  entity-painting-destroy:
+    name: "&6Mobs slopen schilderijen On/Off"
+    material: "PAINTING"
+  entity-item-frame-destroy:
+    name: "&6Mobs slopen item frames On/Off"
+    material: "GLOW_ITEM_FRAME"
+  fire-spread:
+    name: "&6Vuur verspreiden On/Off"
+    material: "CAMPFIRE"
+  lava-fire:
+    name: "&6Lava start vuur On/Off"
+    material: "MAGMA_BLOCK"
+
+  # ---------------------------------------------------------------
+  # Mobs
+  # ---------------------------------------------------------------
+  mob-spawning:
+    name: "&dMob spawning On/Off"
+    material: "SPAWNER"
+  snowman-trails:
+    name: "&dSneeuwgolem sporen On/Off"
+    material: "CARVED_PUMPKIN"
+
+  # ---------------------------------------------------------------
+  # Natuur
+  # ---------------------------------------------------------------
+  crop-growth:
+    name: "&aGewassen groeien On/Off"
+    material: "WHEAT"
+  grass-growth:
+    name: "&aGras groeit On/Off"
+    material: "GRASS_BLOCK"
+  leaf-decay:
+    name: "&aBladeren vergaan On/Off"
+    material: "OAK_LEAVES"
+  mushroom-growth:
+    name: "&aPaddenstoelen groeien On/Off"
+    material: "RED_MUSHROOM"
+  mycelium-spread:
+    name: "&aMycelium verspreiden On/Off"
+    material: "MYCELIUM"
+  vine-growth:
+    name: "&aVines & kelp groeien On/Off"
+    material: "VINE"
+  rock-growth:
+    name: "&aDripstone groeit On/Off"
+    material: "POINTED_DRIPSTONE"
+  sculk-growth:
+    name: "&aSculk groeit On/Off"
+    material: "SCULK"
+  soil-dry:
+    name: "&aAarde droogt uit On/Off"
+    material: "IRON_HOE"
+  coral-fade:
+    name: "&aKoraal sterft af On/Off"
+    material: "BRAIN_CORAL"
+  copper-fade:
+    name: "&aKoper oxideert On/Off"
+    material: "COPPER_BLOCK"
+  water-flow:
+    name: "&bWater stroomt On/Off"
+    material: "WATER_BUCKET"
+  lava-flow:
+    name: "&bLava stroomt On/Off"
+    material: "LAVA_BUCKET"
+  lightning:
+    name: "&bBliksem On/Off"
+    material: "LIGHTNING_ROD"
+  snow-fall:
+    name: "&bSneeuw valt On/Off"
+    material: "SNOW"
+  snow-melt:
+    name: "&bSneeuw smelt On/Off"
+    material: "SNOWBALL"
+  ice-form:
+    name: "&bIJs vormt On/Off"
+    material: "ICE"
+  ice-melt:
+    name: "&bIJs smelt On/Off"
+    material: "BLUE_ICE"
+  frosted-ice-melt:
+    name: "&bFrost Walker ijs smelt On/Off"
+    material: "PACKED_ICE"
+
+  # ---------------------------------------------------------------
+  # Spelers & items
+  # ---------------------------------------------------------------
+  item-pickup:
+    name: "&9Items oppakken On/Off"
+    material: "HOPPER"
+  item-drop:
+    name: "&9Items droppen On/Off"
+    material: "DROPPER"
+  exp-drops:
+    name: "&9XP drops On/Off"
+    material: "EXPERIENCE_BOTTLE"
+  natural-health-regen:
+    name: "&9Natuurlijk herstel On/Off"
+    material: "GOLDEN_APPLE"
+  natural-hunger-drain:
+    name: "&9Honger On/Off"
+    material: "BREAD"
+  enderpearl:
+    name: "&9Enderpearls On/Off"
+    material: "ENDER_PEARL"
+  chorus-fruit-teleport:
+    name: "&9Chorus fruit teleport On/Off"
+    material: "CHORUS_FRUIT"
+  pistons:
+    name: "&9Pistons On/Off"
+    material: "PISTON"

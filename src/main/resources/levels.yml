@@ -1,3 +1,178 @@
-settings:
-  pvp,
-  tnt
+# chunkSize = breedte van het gebied in blokken (altijd een veelvoud van 16)
+# 16 = 1x1 chunk, 32 = 2x2, 48 = 3x3, 64 = 4x4, enz.
+
+levels:
+  1:
+    chunkSize: 16      # 1x1
+    cost: 100
+    rewards:
+      DIAMOND_BLOCK: 10
+      SPAWNER: 2
+    unlocks:
+      - "fly"
+      - "heal"
+  2:
+    chunkSize: 64      # 4x4
+    cost: 500
+    rewards:
+      DIAMOND_BLOCK: 25
+      SPAWNER: 5
+    unlocks:
+      - "god"
+  3:
+    chunkSize: 80      # 5x5
+    cost: 1000
+    rewards:
+      DIAMOND_BLOCK: 30
+      IRON_BLOCK: 32
+    unlocks:
+      - "feed"
+  4:
+    chunkSize: 96      # 6x6
+    cost: 2000
+    rewards:
+      DIAMOND_BLOCK: 35
+      GOLDEN_APPLE: 16
+    unlocks:
+      - "workbench"
+  5:
+    chunkSize: 112     # 7x7
+    cost: 3500
+    rewards:
+      DIAMOND_BLOCK: 40
+      EMERALD_BLOCK: 16
+      SPAWNER: 2
+    unlocks:
+      - "crop-boost-1"
+  6:
+    chunkSize: 128     # 8x8
+    cost: 5000
+    rewards:
+      DIAMOND_BLOCK: 45
+      EXPERIENCE_BOTTLE: 64
+    unlocks:
+      - "enderchest"
+  7:
+    chunkSize: 144     # 9x9
+    cost: 7500
+    rewards:
+      DIAMOND_BLOCK: 50
+      NETHERITE_INGOT: 2
+    unlocks:
+      - "spawn-boost-1"
+  8:
+    chunkSize: 160     # 10x10
+    cost: 10000
+    rewards:
+      DIAMOND_BLOCK: 55
+      SPAWNER: 3
+      SHULKER_BOX: 1
+    unlocks:
+      - "anvil"
+  9:
+    chunkSize: 176     # 11x11
+    cost: 15000
+    rewards:
+      DIAMOND_BLOCK: 60
+      ENCHANTED_GOLDEN_APPLE: 2
+    unlocks:
+      - "ore-boost-1"
+  10:
+    chunkSize: 192     # 12x12
+    cost: 25000
+    rewards:
+      DIAMOND_BLOCK: 64
+      BEACON: 1
+      SPAWNER: 5
+    unlocks:
+      - "repair"
+      - "crop-boost-2"
+  11:
+    chunkSize: 208     # 13x13
+    cost: 35000
+    rewards:
+      EMERALD_BLOCK: 32
+      NETHERITE_INGOT: 4
+    unlocks:
+      - "hat"
+  12:
+    chunkSize: 224     # 14x14
+    cost: 50000
+    rewards:
+      DIAMOND_BLOCK: 64
+      TOTEM_OF_UNDYING: 2
+    unlocks:
+      - "spawn-boost-2"
+  13:
+    chunkSize: 240     # 15x15
+    cost: 75000
+    rewards:
+      DIAMOND_BLOCK: 64
+      SPAWNER: 6
+      SHULKER_BOX: 2
+    unlocks:
+      - "nick"
+  14:
+    chunkSize: 256     # 16x16
+    cost: 100000
+    rewards:
+      NETHERITE_INGOT: 8
+      ENCHANTED_GOLDEN_APPLE: 4
+    unlocks:
+      - "ore-boost-2"
+  15:
+    chunkSize: 272     # 17x17
+    cost: 150000
+    rewards:
+      DIAMOND_BLOCK: 64
+      ELYTRA: 1
+      BEACON: 1
+    unlocks:
+      - "speed"
+      - "crop-boost-3"
+  16:
+    chunkSize: 288     # 18x18
+    cost: 200000
+    rewards:
+      NETHERITE_BLOCK: 1
+      SPAWNER: 8
+    unlocks:
+      - "spawn-boost-3"
+  17:
+    chunkSize: 304     # 19x19
+    cost: 300000
+    rewards:
+      DIAMOND_BLOCK: 64
+      EMERALD_BLOCK: 64
+      TOTEM_OF_UNDYING: 4
+    unlocks:
+      - "ore-boost-3"
+  18:
+    chunkSize: 320     # 20x20
+    cost: 400000
+    rewards:
+      NETHERITE_BLOCK: 2
+      ENCHANTED_GOLDEN_APPLE: 8
+    unlocks:
+      - "back"
+  19:
+    chunkSize: 336     # 21x21
+    cost: 600000
+    rewards:
+      NETHER_STAR: 2
+      SPAWNER: 10
+      BEACON: 2
+    unlocks:
+      - "night-vision"
+  20:
+    chunkSize: 352     # 22x22
+    cost: 1000000
+    rewards:
+      NETHERITE_BLOCK: 4
+      NETHER_STAR: 4
+      DRAGON_HEAD: 1
+      SPAWNER: 15
+    unlocks:
+      - "crop-boost-max"
+      - "spawn-boost-max"
+      - "ore-boost-max"

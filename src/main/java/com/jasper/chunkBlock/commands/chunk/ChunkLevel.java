@@ -40,7 +40,6 @@ public class ChunkLevel {
         return level >= MAX_LEVEL;
     }
 
-    // Voor database opslag (optioneel)
     public Map<String, Object> serialize() {
         Map<String, Object> data = new HashMap<>();
         data.put("level", level);

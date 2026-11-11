@@ -38,6 +38,7 @@ public class ChunkTopGUI {
 
     public void open() {
         ChestGui gui = new ChestGui(4, "Chunk - Top");
+        gui.setOnGlobalClick(event -> event.setCancelled(true));
 
         PaginatedPane pages = new PaginatedPane(9, 3);
         OutlinePane settingsPane = new OutlinePane(9, 3);
@@ -56,8 +57,7 @@ public class ChunkTopGUI {
 
             GuiItem guiItem = new GuiItem(skull, event -> {
                 event.setCancelled(true);
-                player.sendMessage("§7Je klikte op: §e" + member.getName());
-                // Voeg eventueel functionaliteit toe zoals "speler kicken" of "info bekijken"
+                // logic
             });
 
             settingsPane.addItem(guiItem);

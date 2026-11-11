@@ -18,10 +18,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import net.milkbowl.vault.economy.Economy;
+import net.milkbowl.vault.economy.EconomyResponse;
+import org.bukkit.plugin.RegisteredServiceProvider;
+
 
 public final class ChunkBlock extends JavaPlugin {
 
@@ -32,7 +32,7 @@ public final class ChunkBlock extends JavaPlugin {
     private File levelsConfig;
     private FileConfiguration levels;
 
-    // default
+    // default config
     private FileConfiguration config;
 
     private Database database;
@@ -41,6 +41,8 @@ public final class ChunkBlock extends JavaPlugin {
     private LevelStorage levelStorage;
     private SettingsManager settingsManager;
 
+    // vault
+    private static Economy econ = null;
 
     @Override
     public void onEnable() {
@@ -76,10 +78,17 @@ public final class ChunkBlock extends JavaPlugin {
         settingsManager.loadFromConfig();
 
         // Commands & events registreren
-        getCommand("c").setExecutor(new CommandManager(this, teamService));
+        getCommand("c").setExecutor(new CommandManager(this, teamService, settingsManager));
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(this,teamService,database), this);
 
-        Bukkit.getLogger().info("[ChunkBlock] Plugin enabled ✔");
+        // Vault Economy
+        if (!setupEconomy() ) {
+            getLogger().severe(String.format("[%s] - Disabled due to no Vault dependency found!", getDescription().getName()));
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
+
+        Bukkit.getLogger().info("[ChunkBlock] Plugin enabled");
         Bukkit.getLogger().info("[ChunkBlock] Version: " + getDescription().getVersion());
     }
 
@@ -122,35 +131,41 @@ public final class ChunkBlock extends JavaPlugin {
         }
     }
 
+    private boolean setupEconomy() {
+        if (getServer().getPluginManager().getPlugin("Vault") == null) {
+            return false;
+        }
+        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+        if (rsp == null) {
+            return false;
+        }
+        econ = rsp.getProvider();
+        return econ != null;
+    }
+
     public FileConfiguration getSettingsConfig() {
         return this.settingsConfig;
     }
-
+    public static Economy getEconomy() {
+        return econ;
+    }
     public LevelStorage getLevelStorage() {
         return levelStorage;
     }
-
     public static ChunkBlock getInstance() {
         return instance;
     }
-
     public FileConfiguration getLevelsConfig() {
         return levels;
     }
-
     public Database getDatabase() {
         return database;
     }
-
     public TeamService getTeamService() {
         return teamService;
     }
-
     public SettingsManager getSettingsManager() { return settingsManager; }
-
-
     public ChunkStorage getChunkStorage() {
         return chunkStorage;
     }
-
 }

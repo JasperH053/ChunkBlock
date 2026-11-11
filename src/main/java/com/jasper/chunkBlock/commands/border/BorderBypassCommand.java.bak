@@ -1,4 +1,4 @@
-package com.jasper.chunkBlock.commands.border;
+spackage com.jasper.chunkBlock.commands.border;
 
 import com.jasper.chunkBlock.commands.SubCommand;
 import org.bukkit.entity.Player;

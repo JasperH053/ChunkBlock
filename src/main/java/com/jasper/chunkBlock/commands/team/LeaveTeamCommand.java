@@ -20,7 +20,7 @@ public class LeaveTeamCommand extends SubCommand {
     public void perform(Player player, String[] args) {
         if (args.length > 1) {
             String teamName = args[1];
-            Team team = teamService.getTeamByName(teamName); // Always fetch the team by name
+            Team team = teamService.getTeamByName(teamName);
 
             if (team == null) {
                 MessageUtils.sendError(player, "Team does not exist!");

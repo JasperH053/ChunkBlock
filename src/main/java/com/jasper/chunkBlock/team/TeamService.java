@@ -50,15 +50,14 @@ public class TeamService {
         database.addTeam(team);
         chunkStorage.createChunk(team, chunkId, world, player);
         applyBorders(team);
+        MessageUtils.sendSuccess(player, "Succesfully created: " + name + "!");
 
         return team;
     }
 
     public void loadAllTeams() {
-        // Leegmaken om dubbele entries te voorkomen bij reload
         teamsById.clear();
         teamsByPlayer.clear();
-        // (optioneel) chunkStorage ook legen als je die opnieuw opbouwt
         // chunkStorage.clear();
 
         String teamSql   = "SELECT teamid, owner, teamname FROM teams";
@@ -78,14 +77,12 @@ public class TeamService {
                         ? null
                         : UUID.fromString(ownerStr);
 
-                // Maak team en registreer in-memory
                 Team team = new Team(teamId, ownerUuid, name);
                 teamsById.put(teamId, team);
                 if (ownerUuid != null) {
                     teamsByPlayer.put(ownerUuid, team); // ⬅️ owner óók indexeren
                 }
 
-                // Chunk(s) laden
                 ClaimedChunk claimedChunk = loadChunkByTeamId(teamId);
                 if (claimedChunk != null) {
                     chunkStorage.addClaimedChunk(teamId, claimedChunk);
@@ -99,14 +96,13 @@ public class TeamService {
                     Bukkit.getLogger().warning("[ChunkBlock] Geen chunk gevonden voor team " + teamId);
                 }
 
-                // Members voor dit team
                 memberStmt.clearParameters();
                 memberStmt.setString(1, teamId);
                 try (ResultSet memberRs = memberStmt.executeQuery()) {
                     while (memberRs.next()) {
                         UUID memberId = UUID.fromString(memberRs.getString("member_uuid"));
                         team.addMember(memberId);
-                        teamsByPlayer.put(memberId, team); // ⬅️ members indexeren
+                        teamsByPlayer.put(memberId, team); //  index members
                     }
                 }
             }
@@ -240,7 +236,7 @@ public class TeamService {
             MessageUtils.sendError(player, "World does not exist!");
             return;
         }
-        chunk.createBorder(player);
+        chunk.applyBorder(player);
     }
 
 
@@ -320,15 +316,12 @@ public class TeamService {
     public Map<String, Team> getTeams() {
         return teamsById;
     }
-
     public synchronized Team getTeamByPlayer(UUID uuid) {
         return teamsByPlayer.get(uuid);
     }
-
     public Team getTeamById(String teamId) {
         return teamsById.get(teamId);
     }
-
     public class IdGenerator {
     private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     private static final int ID_LENGTH = 8;

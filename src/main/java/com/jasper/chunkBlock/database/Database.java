@@ -5,6 +5,7 @@ import com.jasper.chunkBlock.chunk.ClaimedChunk;
 import com.jasper.chunkBlock.team.Team;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.sql.*;
 import java.util.UUID;
@@ -16,7 +17,7 @@ public class Database {
     public Database(String path) throws SQLException {
         this.url = "jdbc:sqlite:" + path;
 
-        // Init schema op een verse connection
+        // Init
         try (Connection con = DriverManager.getConnection(url);
              Statement statement = con.createStatement()) {
 
@@ -57,7 +58,6 @@ public class Database {
         }
     }
 
-    /** Geef altijd een verse, open Connection terug met de juiste PRAGMAs. */
     public Connection getConnectionF() throws SQLException {
         Connection con = DriverManager.getConnection(url);
         try (Statement st = con.createStatement()) {
@@ -67,7 +67,6 @@ public class Database {
         return con;
     }
 
-    /** Niets te sluiten bij per-call connections; method blijft voor backwards compat. */
     public void closeConnection() { /* no-op */ }
 
     public void addChunk(ClaimedChunk claimedChunk) {
@@ -98,7 +97,7 @@ public class Database {
 
             ps.setInt(10, claimedChunk.getX());
             ps.setInt(11, claimedChunk.getZ());
-            ps.setInt(12, claimedChunk.getClaimRadius());
+            ps.setInt(12, claimedChunk.getBorderSize());
 
             ps.executeUpdate();
         } catch (SQLException e) {
@@ -149,7 +148,6 @@ public class Database {
     }
 
     public boolean deleteTeam(String teamId) {
-        // Optioneel: transactioneel uitvoeren
         try (Connection con = getConnectionF()) {
             con.setAutoCommit(false);
             try (PreparedStatement psMembers = con.prepareStatement(
@@ -215,22 +213,21 @@ public class Database {
         }
     }
 
-    public void updateChunkLevel(ClaimedChunk chunk, int newLevel) {
-        String sql = "UPDATE chunks SET level = ? WHERE world = ? AND center_x = ? AND center_z = ?";
+    public void saveChunkUpgrade(ClaimedChunk chunk) {
+        String sql = "UPDATE chunks SET level = ?, border_radius = ? WHERE chunkid = ?";
         try (Connection con = getConnectionF();
              PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setInt(1, newLevel);
-            ps.setString(2, chunk.getWorldName());
-            ps.setInt(3, chunk.getX());
-            ps.setInt(4, chunk.getZ());
+            ps.setInt(1, chunk.getLevel());
+            ps.setInt(2, chunk.getBorderSize());
+            ps.setString(3, chunk.getChunkId());
             ps.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    public void updateChunkLevelAsync(ClaimedChunk chunk, int newLevel) {
+    public void saveChunkUpgradeAsync(ClaimedChunk chunk) {
         Bukkit.getScheduler().runTaskAsynchronously(ChunkBlock.getInstance(),
-                () -> updateChunkLevel(chunk, newLevel));
+                () -> saveChunkUpgrade(chunk));
     }
 }

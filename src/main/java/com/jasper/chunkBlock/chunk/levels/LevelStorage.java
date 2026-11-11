@@ -23,7 +23,7 @@ public class LevelStorage {
     public LevelStorage(JavaPlugin plugin) {
         this.configFile = new File(plugin.getDataFolder(), "levels.yml");
         if (!configFile.exists()) {
-            plugin.saveResource("levels.yml", false); // kopieer uit resources
+            plugin.saveResource("levels.yml", false); // Copy from resources
         }
         this.config = YamlConfiguration.loadConfiguration(configFile);
     }
@@ -44,7 +44,7 @@ public class LevelStorage {
                 maxBlocksStringKeyed.put(blockEntry.getKey().name(), blockEntry.getValue());
             }
 
-            config.set(path + ".max-blocks", maxBlocksStringKeyed);
+            config.set(path + ".rewards", maxBlocksStringKeyed);
         }
 
         try {
@@ -55,32 +55,35 @@ public class LevelStorage {
     }
 
     public void setLevelConfig(int level, LevelConfig config) {
-        levelConfigs.put(level, config); // Zet in geheugen
-        saveLevelsToConfig(levelConfigs); // Sla direct op in YML
+        levelConfigs.put(level, config);
+        saveLevelsToConfig(levelConfigs);
     }
 
     public LevelConfig getLevelConfig(int level) {
         String path = "levels." + level;
 
-        if (!config.contains(path)) return null;
+        if (!config.contains(path)) {
+            System.out.println("For level + " + level + ": PATH NOT AVAILABLE");
+            return null;
+        }
 
         int chunkSize = config.getInt(path + ".chunkSize");
         int cost = config.getInt(path + ".cost");
 
-        Map<String, Object> rawMap = config.getConfigurationSection("levels." + level + ".max-blocks").getValues(false);
-        Map<Material, Integer> maxBlocks = new HashMap<>();
+        Map<String, Object> rawMap = config.getConfigurationSection("levels." + level + ".rewards").getValues(false);
+        Map<Material, Integer> rewards = new HashMap<>();
 
         for (Map.Entry<String, Object> entry : rawMap.entrySet()) {
             Material material = Material.matchMaterial(entry.getKey());
             if (material != null && entry.getValue() instanceof Integer) {
-                maxBlocks.put(material, (Integer) entry.getValue());
+                rewards.put(material, (Integer) entry.getValue());
             }
         }
 
         // Unlocks
         List<String> unlocks = config.getStringList(path + ".unlocks");
 
-        return new LevelConfig(level, chunkSize, maxBlocks, unlocks, cost);
+        return new LevelConfig(level, chunkSize, rewards, unlocks, cost);
     }
 
     public Map<Integer, LevelConfig> getLevelConfigs() {

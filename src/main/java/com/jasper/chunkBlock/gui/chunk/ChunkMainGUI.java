@@ -12,15 +12,25 @@ import com.jasper.chunkBlock.chunk.ChunkStorage;
 import com.jasper.chunkBlock.chunk.ClaimedChunk;
 import com.jasper.chunkBlock.chunk.settings.SettingsManager;
 import com.jasper.chunkBlock.database.Database;
+import com.jasper.chunkBlock.gui.border.BorderSettingsGUI;
 import com.jasper.chunkBlock.team.Team;
 import com.jasper.chunkBlock.util.MessageUtils;
 import com.jasper.chunkBlock.team.TeamService;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
 
 public class ChunkMainGUI {
 
@@ -51,18 +61,13 @@ public class ChunkMainGUI {
         ChestGui gui = new ChestGui(5, "Chunk - Menu");
         gui.setOnGlobalClick(event -> event.setCancelled(true));
 
-        // AANGEPAST: Posities (0, 0) verwijderd uit constructor
         PatternPane paneel = new PatternPane(9, 5, patroon);
 
-        // AANGEPAST: Posities (0, 0) verwijderd uit constructor
         OutlinePane background = new OutlinePane(9, 5, Pane.Priority.LOWEST);
         background.addItem(new GuiItem(new ItemStack(Material.BLUE_STAINED_GLASS_PANE)));
         background.setRepeat(true);
 
-        // AANGEPAST: Posities (1, 1) verwijderd uit constructor
         OutlinePane navigationPane = new OutlinePane(3, 3);
-
-        // AANGEPAST: Posities (6, 2) verwijderd uit constructor
         OutlinePane circleCenter = new OutlinePane(1, 1, Pane.Priority.HIGH);
 
         // HOME BUTTON
@@ -73,6 +78,7 @@ public class ChunkMainGUI {
         navigationPane.addItem(new GuiItem(shop, event -> {
             Location locationHome = claimedChunk.getHome();
             player.teleport(locationHome);
+            player.closeInventory();
             MessageUtils.sendSuccess(player, "Teleported to your chunk home");
         }));
 
@@ -92,7 +98,8 @@ public class ChunkMainGUI {
         borderMeta.setDisplayName("Chunk - Border ");
         border.setItemMeta(borderMeta);
         navigationPane.addItem(new GuiItem(border, event -> {
-            //navigate to home
+            BorderSettingsGUI borderSettingsGUI = new BorderSettingsGUI(player, teamService, claimedChunk);
+            borderSettingsGUI.open();
         }));
 
         // CHUNK PLAYERS
@@ -129,8 +136,9 @@ public class ChunkMainGUI {
         // CHUNK CIRCLE STATS
         ItemStack chunk = new ItemStack(Material.BEACON);
         ItemMeta  chunkMeta = chunk.getItemMeta();
-        chunkMeta.setDisplayName("Chunk - " + team.getTeamName());
-
+        chunkMeta.setDisplayName("§b§l " + team.getTeamName());
+        chunkMeta.setLore(buildStatsLore(claimedChunk));
+        chunkMeta.setEnchantmentGlintOverride(true);
         chunk.setItemMeta(chunkMeta);
         circleCenter.addItem(new GuiItem(chunk, event -> {
             //logic
@@ -139,13 +147,74 @@ public class ChunkMainGUI {
         // FILLER CIRCLE
         paneel.bindItem('1', new GuiItem(new ItemStack(Material.GRAY_STAINED_GLASS_PANE)));
 
-        // AANGEPAST: Panes toegevoegd met een startpositie via Slot.fromXY(x, y)
         gui.addPane(Slot.fromXY(0, 0), background);
         gui.addPane(Slot.fromXY(1, 1), navigationPane);
         gui.addPane(Slot.fromXY(0, 0), paneel);
         gui.addPane(Slot.fromXY(6, 2), circleCenter);
 
         gui.show(player);
+    }
+
+    private List<String> buildStatsLore(ClaimedChunk claimedChunk) {
+        ConfigurationSection levels = ChunkBlock.getInstance().getLevelsConfig().getConfigurationSection("levels");
+
+        int level = claimedChunk.getLevel();
+        int maxLevel = levels != null ? levels.getKeys(false).size() : level;
+        int chunks = claimedChunk.getChunksPerSide();
+        int size = chunks * 16;
+
+        String ownerName = "Unknown";
+        if (claimedChunk.getOwner() != null) {
+            OfflinePlayer owner = Bukkit.getOfflinePlayer(claimedChunk.getOwner());
+            if (owner.getName() != null) ownerName = owner.getName();
+        }
+
+        Location home = claimedChunk.getHome();
+        String homeText = home != null
+                ? "§7X: §f" + home.getBlockX() + " §7Y: §f" + home.getBlockY() + " §7Z: §f" + home.getBlockZ()
+                : "§cNot set";
+
+        String line = "§8§m" + " ".repeat(30);
+
+        List<String> lore = new ArrayList<>();
+        lore.add(line);
+        lore.add(" §7Owner: §f" + ownerName);
+        lore.add("");
+
+        lore.add(" §b§lLEVEL");
+        lore.add("  §7Level: §b" + level + " §8/ §7" + maxLevel);
+        lore.add("  " + progressBar(level, maxLevel));
+        lore.add("  §7XP: §f" + format((long) claimedChunk.getXp()));
+        lore.add("");
+
+        lore.add(" §a§lAREA");
+        lore.add("  §7Size: §f" + chunks + "×" + chunks + " chunks §8(" + size + "×" + size + ")");
+        lore.add("  §7Surface: §f" + format((long) size * size) + " blocks");
+        lore.add("  §7Home: " + homeText);
+        lore.add("");
+
+        if (levels != null && level < maxLevel) {
+            int next = level + 1;
+            int nextChunks = Math.max(1, levels.getInt(next + ".chunkSize", size) / 16);
+            lore.add(" §6§lNEXT LEVEL");
+            lore.add("  §7Cost: §6$" + format(levels.getLong(next + ".cost")));
+            lore.add("  §7New size: §f" + nextChunks + "×" + nextChunks + " chunks");
+        } else {
+            lore.add(" §a§l✔ MAX LEVEL REACHED");
+        }
+
+        lore.add(line);
+        return lore;
+    }
+
+    private String progressBar(int value, int max) {
+        double ratio = max > 0 ? Math.min(1.0, (double) value / max) : 0;
+        int filled = (int) Math.round(ratio * 20);
+        return "§8[§a" + "|".repeat(filled) + "§7" + "|".repeat(20 - filled) + "§8] §7" + (int) (ratio * 100) + "%";
+    }
+
+    private String format(long number) {
+        return String.format(Locale.US, "%,d", number);
     }
 
     // FILLER LIGHT BLUE

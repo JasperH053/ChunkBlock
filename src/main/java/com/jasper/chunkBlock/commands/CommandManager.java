@@ -1,10 +1,9 @@
 package com.jasper.chunkBlock.commands;
 
 import com.jasper.chunkBlock.ChunkBlock;
-import com.jasper.chunkBlock.commands.chunk.ChunkHomeCommand;
-import com.jasper.chunkBlock.commands.chunk.ChunkMainCommand;
-import com.jasper.chunkBlock.commands.chunk.ChunkSetHomeCommand;
-import com.jasper.chunkBlock.commands.chunk.ChunkUpgradeCommand;
+import com.jasper.chunkBlock.chunk.settings.SettingsManager;
+import com.jasper.chunkBlock.commands.border.BorderSettingsCommand;
+import com.jasper.chunkBlock.commands.chunk.*;
 import com.jasper.chunkBlock.commands.team.*;
 import com.jasper.chunkBlock.commands.util.HulpCommand;
 import com.jasper.chunkBlock.commands.util.ShowTeams;
@@ -25,8 +24,9 @@ public class CommandManager implements CommandExecutor {
     private ArrayList<SubCommand> subcommands = new ArrayList<>();
     private ChunkBlock plugin;
     private TeamService teamService;
+    private SettingsManager settingsManager;
 
-    public CommandManager(ChunkBlock plugin, TeamService teamService) {
+    public CommandManager(ChunkBlock plugin, TeamService teamService, SettingsManager settingsManager) {
         this.plugin = plugin;
         this.teamService = teamService;
         subcommands.add(new HulpCommand("", "", "", this));
@@ -36,9 +36,10 @@ public class CommandManager implements CommandExecutor {
         subcommands.add(new DisbandTeamCommand("","","",teamService));
         subcommands.add(new ChunkHomeCommand("","","", teamService));
         subcommands.add(new ChunkSetHomeCommand("","","",teamService));
-//        subcommands.add(new ChunkSettingsCommand("","","",team,teamStorage));
+        subcommands.add(new ChunkSettingsCommand("","","",teamService, settingsManager));
         subcommands.add(new ShowTeams("","","",teamService));
         subcommands.add(new ChunkUpgradeCommand("", "", "",teamService));
+        subcommands.add(new BorderSettingsCommand("", "", "", teamService));
     }
 
     @Override

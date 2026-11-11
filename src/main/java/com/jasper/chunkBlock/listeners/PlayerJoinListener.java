@@ -38,9 +38,8 @@ public class PlayerJoinListener implements Listener {
             Team team = teamService.getTeamByPlayer(player.getUniqueId());
             if (team == null) { player.setWorldBorder(null); return; }
 
-            // Haal chunk via teamId, NIET via owner
             ClaimedChunk chunk = teamService.getClaimedChunkByTeamId(team.getTeamId());
-            teamService.applyBorderForPlayer(player, chunk); // zorg dat deze null-safe is
+            teamService.applyBorderForPlayer(player, chunk);
         }, 1L);
     }
 

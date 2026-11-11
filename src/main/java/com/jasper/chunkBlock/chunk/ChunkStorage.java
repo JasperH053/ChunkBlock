@@ -10,6 +10,9 @@ import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.LocalPlayer;
 import com.sk89q.worldguard.WorldGuard;
+import com.sk89q.worldguard.protection.flags.Flags;
+import com.sk89q.worldguard.protection.flags.RegionGroup;
+import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
@@ -47,15 +50,15 @@ public class ChunkStorage {
                 team.getOwner().toString(),
                 level,
                 world.getName(),
-                (int) player.getX(), // (Aangenomen dat deze eerste 3 voor een speler 'home' locatie zijn)
-                (int) player.getY(),
+                (int) player.getX(),
+                (int) player.getY(), // using player location at first creation for home.
                 (int) player.getZ(),
-                bukkitChunk.getX(),  // <-- Gebruik hier de échte chunk X (bijv. -2777)
-                bukkitChunk.getZ(),  // <-- Gebruik hier de échte chunk Z (bijv. -3241)
+                bukkitChunk.getX(),
+                bukkitChunk.getZ(),
                 config.getInt("defaultChunkSize")
         );
         claimedChunk.setHome(player.getLocation());
-        claimedChunk.createBorder(player);
+        claimedChunk.applyBorder(player);
 
         chunksByTeamId.put(team.getTeamId(), claimedChunk);
         database.addChunk(claimedChunk);
@@ -74,15 +77,12 @@ public class ChunkStorage {
 
         String regionId = "team_" + team.getTeamId();
 
-        // 1. Vermenigvuldig de chunk-coördinaten met 16 voor de uiterste hoek
         int minX = chunk.getX() * 16;
         int minZ = chunk.getZ() * 16;
 
-        // 2. Tel er 15 bij op voor de andere hoek (een chunk is 16x16 blokken)
         int maxX = minX + 15;
         int maxZ = minZ + 15;
 
-        // Omdat je nu een echt 'World' object meegeeft, werken deze perfect!
         int minY = world.getMinHeight();
         int maxY = world.getMaxHeight();
 
@@ -90,6 +90,11 @@ public class ChunkStorage {
         BlockVector3 max = BlockVector3.at(maxX, maxY, maxZ);
 
         ProtectedRegion region = new ProtectedCuboidRegion(regionId, min, max);
+        region.setFlag(Flags.EXIT, StateFlag.State.DENY);
+        region.setFlag(Flags.EXIT.getRegionGroupFlag(), RegionGroup.ALL);
+        region.setFlag(Flags.EXIT_VIA_TELEPORT, StateFlag.State.ALLOW);
+        region.setFlag(Flags.EXIT_DENY_MESSAGE, "§cYou can't walk here.");
+
         manager.addRegion(region);
 
         DefaultDomain owners = region.getOwners();
